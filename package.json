@@ -1,0 +1,27 @@
+{
+    "name": "autonomon",
+    "version": "0.1.0",
+    "description": "Autonomous financial organisms powered by reinforcement learning on GLOFICA DLT",
+    "type": "module",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "test": "vitest run",
+        "dev": "tsc --watch",
+        "demo": "node dist/demo.js"
+    },
+    "keywords": [
+        "ai-agents",
+        "reinforcement-learning",
+        "q-learning",
+        "blockchain",
+        "glofica",
+        "autonomous"
+    ],
+    "license": "MIT",
+    "devDependencies": {
+        "typescript": "^5.5.0",
+        "vitest": "^2.0.0",
+        "@types/node": "^22.0.0"
+    }
+}

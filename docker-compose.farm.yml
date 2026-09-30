@@ -1,0 +1,63 @@
+﻿version: '3.8'
+
+services:
+  # ═══════════════════════════════════════════════════════════════════
+  # 1. EL HABLADOR COMPARTIDO (Ollama / Qwen 2.5) — Un solo servicio por granja
+  # ═══════════════════════════════════════════════════════════════════
+  ollama-speaker:
+    image: ollama/ollama:latest
+    container_name: langton-ollama-speaker
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+  # ═══════════════════════════════════════════════════════════════════
+  # 2. EL ORÁCULO PREDICTIVO COMPARTIDO (Google TimesFM) — Un solo servicio
+  # ═══════════════════════════════════════════════════════════════════
+  timesfm-oracle:
+    build:
+      context: ./timesfm-service
+      dockerfile: Dockerfile
+    container_name: langton-timesfm-oracle
+    restart: unless-stopped
+    ports:
+      - "8008:8008"
+    environment:
+      - MODEL_CHECKPOINT=google/timesfm-1.0-200m
+      - PORT=8008
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+  # ═══════════════════════════════════════════════════════════════════
+  # 3. ENJAMBRE DE AGENTES LANGTON (Ultraligeros: ~25 MB c/u en Bun)
+  #    Motor Q-Learning + Wallet Ed25519 Local + Podador RocksDB
+  # ═══════════════════════════════════════════════════════════════════
+  langton-agent-swarm:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    restart: unless-stopped
+    environment:
+      - GLOFICA_RPC=http://173.249.51.203:9000
+      - TIMESFM_SERVICE_URL=http://timesfm-oracle:8008/forecast
+      - OLLAMA_HOST=http://ollama-speaker:11434
+      - LANGTON_AGENTS_COUNT=50
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G # 50-80 agentes corren en apenas 1.5 - 2GB de RAM!
+    depends_on:
+      - timesfm-oracle
+      - ollama-speaker
+
+volumes:
+  ollama-data:
