@@ -7,6 +7,7 @@
     "scripts": {
         "build": "tsc",
         "test": "vitest run",
+        "consistency": "vitest run test/consistency.test.ts",
         "dev": "tsc --watch",
         "demo": "node dist/demo.js"
     },
