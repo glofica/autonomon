@@ -81,26 +81,64 @@ An organism with funded stake, segregated operating runway, and operational buff
 
 ## Architecture
 
+Three tiers. The agent is one sovereign organism; forecasting and narrative are shared services.
+
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                       AUTONOMON APPLIANCE                       │
-│                                                                 │
-│  ┌──────────────┐   ┌──────────────┐   ┌───────────────────┐    │
-│  │ Sovereign    │   │ Policy       │   │ Execution Safety  │    │
-│  │ Fullnode     │◄──┤ Controller   │──►│ Layer             │    │
-│  │ Rust / Move  │   │ Bun / TS     │   │ Admission + Move  │    │
-│  └──────────────┘   └──────┬───────┘   └───────────────────┘    │
-│         ▲                  │                                    │
-│         │           ┌──────▼───────┐   ┌───────────────────┐    │
-│         │           │ Supervisor   │   │ Narrative Service │    │
-│         │           │ Deterministic│   │ Qwen / Ollama     │    │
-│         │           └──────────────┘   └───────────────────┘    │
-│         │                                                       │
-│         │           ┌──────────────┐                            │
-│         └───────────┤ Forecasting  │  (shared, stateless)       │
-│                     │ TimesFM      │                            │
-│                     └──────────────┘                            │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│  AUTONOMON APPLIANCE (Docker container)                             │
+│                                                                     │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  TIER 1 — SOVEREIGN OPERATIONAL CORE (Bun/TS, ~25 MB)         │  │
+│  │                                                               │  │
+│  │  ┌────────────┐  ┌──────────────┐  ┌───────────────────────┐  │  │
+│  │  │ Q-Policy   │──│ Safety Layer │──│ Execution Adapter     │  │  │
+│  │  │ (tabular)  │  │ (admission)  │  │ (Move tx builder)     │  │  │
+│  │  └────────────┘  └──────────────┘  └───────────────────────┘  │  │
+│  │        ▲                ▲                     ▲               │  │
+│  │        │                │                     │               │  │
+│  │  ┌─────┴─────┐  ┌───────┴────────┐  ┌─────────┴────────────┐  │  │
+│  │  │ Genome +  │  │ SRE Supervisor │  │ Ed25519 Keystore     │  │  │
+│  │  │ Mutation  │  │ (deterministic)│  │ (RAM only, no disk)  │  │  │
+│  │  └───────────┘  └────────────────┘  └──────────────────────┘  │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  SOVEREIGN FULLNODE (Rust / Tokio / Move VM)                  │  │
+│  │  Ledger sync · Local verification · Tx submission             │  │
+│  │  Non-validating by default                                    │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│                              ▲                                      │
+│                              │ local RPC / IPC                      │
+└──────────────────────────────┼──────────────────────────────────────┘
+                               │
+              ┌────────────────┼─────────────────┐
+              │                                  │
+              ▼                                  ▼
+┌──────────────────────────────┐   ┌──────────────────────────────┐
+│  TIER 2 — TIMESFM ORACLE     │   │  TIER 3 — COGNITIVE SOUL     │
+│  (Python, shared VPS)        │   │  (Ollama + Qwen 2.5, shared) │
+│                              │   │                              │
+│  Quantiles p10 / p50 / p90   │   │  Narrative · Diary · Audit   │
+│  Critical dependency         │   │  Best-effort · No authority  │
+│  Fail-safe → HOLD-only       │   │  Async · Never blocks        │
+└──────────────────────────────┘   └──────────────────────────────┘
+```
+
+**Tier 1 — Sovereign Operational Core.**  
+The agent itself, in Bun/TypeScript at ~25 MB. Contains the Q-policy, the safety layer, the genome, the deterministic SRE supervisor, and the volatile Ed25519 keystore. No shared custody. No delegated authority.
+
+**Sovereign Fullnode.**  
+Rust / Tokio / Move VM. Runs in the same container as Tier 1, connected by local RPC or IPC. It synchronizes and verifies the ledger, and submits transactions. Non-validating by default.
+
+**Tier 2 — TimesFM Oracle.**  
+Shared Python service on an external VPS. Supplies timestamped quantile forecasts (p10, p50, p90). It is a **critical dependency**: if it is unreachable, the agent enters HOLD-only fail-safe. It never falls back to a local regression.
+
+**Tier 3 — Cognitive Soul.**  
+Shared Ollama + Qwen 2.5 service on an external VPS. Generates narrative, diary, and audit summaries. It has **zero execution authority** and is **asynchronous and best-effort**: if it is unreachable, the agent continues operating normally.
+
+**Why the tiers are separated.**  
+The forecasting service is compute-heavy and shared across the fleet. The narrative service is large and shared. Neither needs access to keys, policy state, or the ledger. Both can be externalized without weakening the agent's custody model. The Tier 1 core stays small, sovereign, and self-contained.
+
 ```
 
 **Lightweight agent, shared intelligence.**  
