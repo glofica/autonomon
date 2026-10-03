@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Langton — Artificial Life Financial Organism Demo
  *
  * Simulates a Langton agent with:
@@ -42,9 +42,9 @@ function generateMarketStep(step: number): { obs: MarketObservation; history: nu
         history: [...priceBuffer],
     };
 }
-
 function calculateReward(action: string, obs: MarketObservation, forecastTrend: string): number {
-    const isBull = obs.price > obs.previousPrice;
+    const prev = obs.previousPrice ?? obs.price;
+    const isBull = obs.price > prev;
     const forecastCorrect = (isBull && forecastTrend === 'bullish') || (!isBull && forecastTrend === 'bearish');
 
     if (action.startsWith('buy_')) {
