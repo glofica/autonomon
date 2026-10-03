@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Langton Agents — Complete Entry Point
  *
  * Three-Tier Architecture:
@@ -8,9 +8,13 @@
  * + Autonomous Node & Cluster DevOps (RocksDB pruner, security watchdog, self-funding)
  */
 
-// Genome & Mutation
+// Genome & Mutation (Paper §7)
 export {
     type LangtonGenome,
+    type NumericGenome,
+    type GenomeLocusDefinition,
+    GENOME_LOCI,
+    clipGenomeToBox,
     type RiskModule,
     type MarketModule,
     type TemporalModule,
@@ -22,7 +26,7 @@ export {
     type MetaModule,
     DEFAULT_GENOME,
 } from './genome/types.js';
-export { mutate } from './genome/mutation.js';
+export { mutate, mutateNumericGenome, mutateLocus } from './genome/mutation.js';
 export { calculateFitness, shouldDie, canReproduce, type FitnessInput, type FitnessScore } from './genome/fitness.js';
 
 // Reinforcement Learning

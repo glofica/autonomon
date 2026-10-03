@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Langton Genome — Mutation Engine
  *
  * Each module mutates independently during reproduction.
@@ -8,6 +8,7 @@
 
 import type {
     LangtonGenome,
+    NumericGenome,
     EntryStrategy,
     HoldingPeriod,
     SoulPersonality,
@@ -22,6 +23,30 @@ function gaussian(mean = 0, stdev = 1): number {
 
 function clamp(val: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, val));
+}
+
+/**
+ * Mutate a single numerical locus per Paper §7 Proposition 5:
+ * g_i^child = clip(g_i^parent * (1 + xi_i), l_i, u_i) where xi_i ~ N(0, 0.05^2)
+ */
+export function mutateLocus(parentVal: number, min: number, max: number, stdev = 0.05): number {
+    const xi = gaussian(0, stdev);
+    return clamp(parentVal * (1 + xi), min, max);
+}
+
+/**
+ * Mutate the 7 canonical numerical loci per Paper §7 Proposition 5
+ */
+export function mutateNumericGenome(parent: NumericGenome): NumericGenome {
+    return {
+        g_risk: Number(mutateLocus(parent.g_risk, 0.10, 5.00).toFixed(4)),
+        g_tau: Math.round(mutateLocus(parent.g_tau, 5, 60)),
+        g_epsilon: Number(mutateLocus(parent.g_epsilon, 0.05, 0.50).toFixed(4)),
+        g_alpha: Number(mutateLocus(parent.g_alpha, 0.01, 0.25).toFixed(4)),
+        g_gas: Math.round(mutateLocus(parent.g_gas, 100, 1000)),
+        g_omega: Number(mutateLocus(parent.g_omega, 0.05, 0.40).toFixed(4)),
+        g_mitosis: Number(mutateLocus(parent.g_mitosis, 1.50, 3.00).toFixed(4)),
+    };
 }
 
 function pickRandom<T>(arr: readonly T[]): T {
@@ -40,7 +65,19 @@ const ALL_PRODUCTS = ['gQMF', 'gOIL', 'gLRE', 'gCO2', 'gTBND', 'gHASH', 'gGOLD']
 export function mutate(parent: LangtonGenome): LangtonGenome {
     const rate = parent.reproduction.mutationRate;
 
+    // Mutate 7 loci per Paper §7 Proposition 5
+    const loci = mutateNumericGenome({
+        g_risk: parent.g_risk ?? 1.0,
+        g_tau: parent.g_tau ?? 15,
+        g_epsilon: parent.g_epsilon ?? 0.30,
+        g_alpha: parent.g_alpha ?? 0.10,
+        g_gas: parent.g_gas ?? 250,
+        g_omega: parent.g_omega ?? 0.20,
+        g_mitosis: parent.g_mitosis ?? 2.00,
+    });
+
     const child: LangtonGenome = {
+        ...loci,
         // ── Risk Module ──
         risk: {
             riskTolerance: shouldMutate(rate)

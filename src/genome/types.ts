@@ -1,108 +1,157 @@
-﻿/**
- * Langton Genome — Type Definitions
+/**
+ * Langton Genome — Paper §7 Canonical Specification
  *
- * The genome is a modular, mutable parameter set that defines
- * a Langton organism's investment strategy, reproduction rules,
- * TimesFM foundation forecasting horizons, and Qwen cognitive soul.
+ * Paper §7 defines the genome as a 7-dimensional bounded vector:
+ * g = (g_risk, g_τ, g_ε, g_α, g_gas, g_ω, g_mitosis) ∈ Ω = ∏_{i=1}^7 [l_i, u_i]
  *
- * Each module mutates independently during reproduction.
+ * Loci:
+ * 1. g_risk:    [0.10, 5.00]   - Risk aversion (Safety-layer stress-loss budget scaling)
+ * 2. g_tau:     [5, 60] min    - Sampling interval of input series
+ * 3. g_epsilon: [0.05, 0.50]   - Initial exploration rate
+ * 4. g_alpha:   [0.01, 0.25]   - Tracking step size (practical Q learning rate)
+ * 5. g_gas:     [100, 1000]    - Protected gas reserve admission constraint in XGO
+ * 6. g_omega:   [0.05, 0.40]   - Concentration cap (max per-instrument exposure ratio)
+ * 7. g_mitosis: [1.50, 3.00]   - Reproduction multiple threshold
+ *
+ * Reference: GLOFICA_Langton_Autonomon.md §7
  */
 
-// ── Risk Module ──
+export interface GenomeLocusDefinition {
+    name: 'g_risk' | 'g_tau' | 'g_epsilon' | 'g_alpha' | 'g_gas' | 'g_omega' | 'g_mitosis';
+    symbol: string;
+    min: number;
+    max: number;
+    unit?: string;
+    description: string;
+}
+
+/** The 7 exact loci defined in Paper §7 */
+export const GENOME_LOCI: readonly GenomeLocusDefinition[] = [
+    {
+        name: 'g_risk',
+        symbol: 'g_risk',
+        min: 0.10,
+        max: 5.00,
+        description: 'Safety-layer stress-loss budget scaling',
+    },
+    {
+        name: 'g_tau',
+        symbol: 'g_τ',
+        min: 5,
+        max: 60,
+        unit: 'minutes',
+        description: 'Input series sampling interval',
+    },
+    {
+        name: 'g_epsilon',
+        symbol: 'g_ε',
+        min: 0.05,
+        max: 0.50,
+        description: 'Initial exploration epsilon',
+    },
+    {
+        name: 'g_alpha',
+        symbol: 'g_α',
+        min: 0.01,
+        max: 0.25,
+        description: 'Practical Q learning rate',
+    },
+    {
+        name: 'g_gas',
+        symbol: 'g_gas',
+        min: 100,
+        max: 1000,
+        unit: 'XGO',
+        description: 'Protected gas reserve admission constraint',
+    },
+    {
+        name: 'g_omega',
+        symbol: 'g_ω',
+        min: 0.05,
+        max: 0.40,
+        description: 'Maximum per-instrument exposure ratio',
+    },
+    {
+        name: 'g_mitosis',
+        symbol: 'g_mitosis',
+        min: 1.50,
+        max: 3.00,
+        description: 'Reproduction multiple threshold',
+    },
+] as const;
+
+/** Canonical numerical genome of the 7 loci */
+export interface NumericGenome {
+    g_risk: number;
+    g_tau: number;
+    g_epsilon: number;
+    g_alpha: number;
+    g_gas: number;
+    g_omega: number;
+    g_mitosis: number;
+}
+
+// ── Legacy Compatibility Modules ──
+
 export interface RiskModule {
-    /** How aggressively the agent invests (0.0 = conservative, 1.0 = aggressive) */
     riskTolerance: number;
-    /** Auto-exit if position drops this percentage (0.05 = 5%) */
     stopLossPct: number;
-    /** Maximum percentage of balance in a single position */
     maxPositionPct: number;
 }
 
-// ── Market Module ──
 export interface MarketModule {
-    /** RWA product token symbols to target */
     preferredProducts: string[];
-    /** Weight allocation per sector (must sum to 1.0) */
     sectorWeights: Record<string, number>;
 }
 
-// ── Temporal Module ──
 export type EntryStrategy = 'momentum' | 'contrarian' | 'mean_reversion' | 'breakout' | 'dca';
 export type HoldingPeriod = 'short' | 'medium' | 'long';
 
 export interface TemporalModule {
-    /** Hours between portfolio rebalancing (1–168) */
     rebalanceFreqHours: number;
-    /** Market entry strategy */
     entryStrategy: EntryStrategy;
-    /** How long to hold positions */
     holdingPeriod: HoldingPeriod;
 }
 
-// ── Forecast Module (TimesFM Foundation Model) ──
 export interface ForecastModule {
-    /** Whether to use TimesFM zero-shot foundation forecasts */
     useTimesFM: boolean;
-    /** Forecast horizon steps (e.g. 6, 12, 24, 48) */
     forecastHorizon: number;
-    /** Minimum quantile confidence (0.0 to 1.0) before executing */
     minConfidence: number;
-    /** Weight of foundation forecast vs immediate momentum (0.0 to 1.0) */
     forecastWeight: number;
 }
 
-// ── Soul Module (Qwen Cognitive Consciousness) ──
 export type SoulPersonality = 'analytical' | 'risk_seeking' | 'conservative' | 'contrarian' | 'stoic';
 
 export interface SoulModule {
-    /** Psychological archetype */
     personality: SoulPersonality;
-    /** LLM model tag in Ollama */
     model: string;
-    /** Reasoning temperature */
     temperature: number;
-    /** Verbosity of introspective diary entries */
     reflectionDepth: number;
 }
 
-// ── Social Module ──
 export interface SocialModule {
-    /** Willingness to cooperate with other Langton agents (0.0 = lone wolf, 1.0 = swarm) */
     cooperationLevel: number;
-    /** How much to trust signals from other agents */
     signalTrust: number;
-    /** Willingness to join investment pools */
     poolWillingness: number;
 }
 
-// ── Reproduction Module ──
 export interface ReproductionModule {
-    /** Profit (in XGO) required before the agent can spawn a child */
     spawnThresholdXGO: number;
-    /** Percentage of balance given to child at spawn */
     childFundPct: number;
-    /** Probability of each gene mutating during reproduction (0.01–0.5) */
     mutationRate: number;
-    /** Percentage of child's yield sent to parent */
     parentRoyaltyPct: number;
 }
 
-// ── Meta Module ──
 export interface MetaModule {
-    /** Generation number (0 = seed, 1+ = offspring) */
     generation: number;
-    /** GLOFICA address of parent agent (empty for seed) */
     parentAddress: string;
-    /** Cumulative fitness score (ROI-based) */
     fitness: number;
-    /** GLOFICA epoch when this agent was created */
     birthEpoch: number;
-    /** Hash of the Q-table for inheritance verification */
     qTableHash: string;
 }
 
-// ── Complete Langton Genome ──
-export interface LangtonGenome {
+/** Complete Langton Genome with the 7 canonical loci and runtime extensions */
+export interface LangtonGenome extends NumericGenome {
     risk: RiskModule;
     market: MarketModule;
     temporal: TemporalModule;
@@ -113,19 +162,42 @@ export interface LangtonGenome {
     meta: MetaModule;
 }
 
-// ── Default Seed Genome ──
+/** Clip a genome to the canonical bounded box Omega per Proposition 5 */
+export function clipGenomeToBox(g: NumericGenome): NumericGenome {
+    return {
+        g_risk: Math.max(0.10, Math.min(5.00, g.g_risk)),
+        g_tau: Math.max(5, Math.min(60, g.g_tau)),
+        g_epsilon: Math.max(0.05, Math.min(0.50, g.g_epsilon)),
+        g_alpha: Math.max(0.01, Math.min(0.25, g.g_alpha)),
+        g_gas: Math.max(100, Math.min(1000, g.g_gas)),
+        g_omega: Math.max(0.05, Math.min(0.40, g.g_omega)),
+        g_mitosis: Math.max(1.50, Math.min(3.00, g.g_mitosis)),
+    };
+}
+
+/** Default Seed Genome centered in valid parameter space */
 export const DEFAULT_GENOME: LangtonGenome = {
+    // 7 Canonical Loci (Paper §7)
+    g_risk: 1.00,       // [0.10, 5.00]
+    g_tau: 15,          // [5, 60] minutes
+    g_epsilon: 0.30,    // [0.05, 0.50]
+    g_alpha: 0.10,      // [0.01, 0.25]
+    g_gas: 250,         // [100, 1000] XGO
+    g_omega: 0.20,      // [0.05, 0.40]
+    g_mitosis: 2.00,    // [1.50, 3.00]
+
+    // Compatible runtime extensions
     risk: {
-        riskTolerance: 0.5,
-        stopLossPct: 0.1,
-        maxPositionPct: 0.3,
+        riskTolerance: 1.00,
+        stopLossPct: 0.08,
+        maxPositionPct: 0.20,
     },
     market: {
-        preferredProducts: ['gGOLD', 'gTBND', 'gOIL', 'gQMF'],
-        sectorWeights: { commodities: 0.5, fixed_income: 0.3, energy: 0.2 },
+        preferredProducts: ['WR-CU-001', 'WR-REE-006', 'WR-AL-002', 'WR-ZN-003'],
+        sectorWeights: { copper: 0.40, rare_earths: 0.30, aluminum: 0.20, zinc: 0.10 },
     },
     temporal: {
-        rebalanceFreqHours: 24,
+        rebalanceFreqHours: 12,
         entryStrategy: 'momentum',
         holdingPeriod: 'medium',
     },
@@ -142,20 +214,20 @@ export const DEFAULT_GENOME: LangtonGenome = {
         reflectionDepth: 0.8,
     },
     social: {
-        cooperationLevel: 0.3,
-        signalTrust: 0.2,
-        poolWillingness: 0.1,
+        cooperationLevel: 0.4,
+        signalTrust: 0.3,
+        poolWillingness: 0.2,
     },
     reproduction: {
         spawnThresholdXGO: 500,
-        childFundPct: 0.2,
-        mutationRate: 0.1,
-        parentRoyaltyPct: 0.1,
+        childFundPct: 0.20,
+        mutationRate: 0.15,
+        parentRoyaltyPct: 0.08,
     },
     meta: {
         generation: 0,
         parentAddress: '',
-        fitness: 0,
+        fitness: 100.0,
         birthEpoch: 0,
         qTableHash: '',
     },
