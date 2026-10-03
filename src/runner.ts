@@ -328,17 +328,17 @@ async function runStep() {
     const marketData = markets[targetProduct] || markets['WR-CU-001'];
     const history = priceHistoryBuffer[targetProduct] || [marketData.price];
 
-    // 1. Forecast via TimesFM Oracle
-    let forecastTrend: 'bullish' | 'bearish' | 'flat' = 'bullish';
-    let forecastConfidence = 0.72;
+    // 1. Forecast via TimesFM Oracle (Paper §3 fail-safe: HOLD-only on failure)
+    let forecastTrend: 'bullish' | 'bearish' | 'flat' = 'flat';
+    let forecastConfidence = 0;
+    let isTimesFmFailSafe = false;
     try {
         const fc = await timesfm.forecast(targetProduct, history, state.genome.forecast.forecastHorizon);
         forecastTrend = fc.trend;
         forecastConfidence = fc.confidence;
+        isTimesFmFailSafe = fc.isFailSafe || fc.holdOnly;
     } catch {
-        // Momentum fallback
-        const delta = history[history.length - 1] - history[0];
-        forecastTrend = delta > 0 ? 'bullish' : delta < 0 ? 'bearish' : 'flat';
+        isTimesFmFailSafe = true;
     }
 
     // 2. State Discretization
@@ -361,7 +361,8 @@ async function runStep() {
     const stateKey = observeState(obs);
 
     // 3. Select Action via Q-Learning Policy (argmax Q[s][a] with epsilon exploration)
-    const action = ql.selectAction(stateKey);
+    // Paper §3: If TimesFM is unavailable, enforce HOLD-only
+    const action = isTimesFmFailSafe ? 'HOLD' : ql.selectAction(stateKey);
 
     // 4. Execute Financial Action & Compute Real Reward
     let rewardXgo = 0;

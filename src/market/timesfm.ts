@@ -1,10 +1,17 @@
-﻿/**
+/**
  * TimesFM Integration (Time Series Foundation Model)
  *
  * Provides zero-shot time series forecasting for Autonomon agents.
  * TimesFM (developed by Google Research) predicts multi-step price trajectories
  * and quantiles (p10, p50, p90) to enrich the agent's Q-Learning state
- * with forward-looking expectations rather than purely backward-looking indicators.
+ * with forward-looking expectations.
+ *
+ * Paper §3 Fail-Safe:
+ * If TimesFM service is unavailable, unreachable, or returns invalid/insufficient
+ * data, the architecture routes to an external fail-safe mode with HOLD-only execution.
+ * Local linear regression / heuristic trend estimation fallbacks are strictly prohibited.
+ *
+ * Reference: GLOFICA_Langton_Autonomon.md §1.2, §3, §6.2
  */
 
 export interface TimesFMConfig {
@@ -27,12 +34,14 @@ export interface TimesFMForecast {
     trend: 'bullish' | 'bearish' | 'flat';
     quantileSpreadPct: number;
     confidence: number;
-    engine: 'timesfm-service' | 'timesfm-fallback-estimator';
+    engine: 'timesfm-service' | 'timesfm-failsafe';
+    isFailSafe: boolean;
+    holdOnly: boolean;
 }
 
 const DEFAULT_CONFIG: Required<TimesFMConfig> = {
     serviceUrl: process.env.TIMESFM_SERVICE_URL || 'http://127.0.0.1:8008/forecast',
-    defaultHorizon: 24,
+    defaultHorizon: 32, // Paper §3.3 specifies horizon H = 32 samples
     quantiles: [0.1, 0.5, 0.9],
     timeoutMs: 3000,
 };
@@ -44,6 +53,10 @@ export class TimesFMClient {
         this.config = { ...DEFAULT_CONFIG, ...config };
     }
 
+    /**
+     * Request quantiles forecast from TimesFM service.
+     * If the service fails or is unreachable, enforces fail-safe HOLD-only.
+     */
     async forecast(
         symbol: string,
         priceHistory: number[],
@@ -53,7 +66,8 @@ export class TimesFMClient {
         const currentPrice = priceHistory[priceHistory.length - 1] || 100;
 
         if (priceHistory.length < 5) {
-            return this.generateFallbackForecast(symbol, priceHistory, h, currentPrice);
+            // Insufficient history -> Paper §3 fail-safe HOLD-only
+            return this.generateFailSafe(symbol, currentPrice, h, priceHistory.length, 'Insufficient price history');
         }
 
         try {
@@ -79,10 +93,40 @@ export class TimesFMClient {
                 return this.parseServiceResponse(symbol, data, currentPrice, h);
             }
         } catch {
-            // Service offline or timeout -> use local mathematical estimator
+            // Service offline, timed out, or network partition
         }
 
-        return this.generateFallbackForecast(symbol, priceHistory, h, currentPrice);
+        // Fail-safe: No local linear regression. Enforce HOLD-only per Paper §3.
+        return this.generateFailSafe(symbol, currentPrice, h, priceHistory.length, 'TimesFM service unavailable');
+    }
+
+    /**
+     * Generate canonical fail-safe response (Paper §3 fail-safe: HOLD-only)
+     */
+    private generateFailSafe(
+        symbol: string,
+        currentPrice: number,
+        horizon: number,
+        contextLength: number,
+        _reason: string
+    ): TimesFMForecast {
+        return {
+            symbol,
+            contextLength,
+            horizon,
+            medianForecast: [],
+            lowerQuantile: [],
+            upperQuantile: [],
+            targetPrice: currentPrice,
+            currentPrice,
+            expectedReturnPct: 0,
+            trend: 'flat',
+            quantileSpreadPct: 0,
+            confidence: 0,
+            engine: 'timesfm-failsafe',
+            isFailSafe: true,
+            holdOnly: true,
+        };
     }
 
     private parseServiceResponse(
@@ -121,79 +165,8 @@ export class TimesFMClient {
             quantileSpreadPct: spreadPct * 100,
             confidence,
             engine: 'timesfm-service',
-        };
-    }
-
-    private generateFallbackForecast(
-        symbol: string,
-        history: number[],
-        horizon: number,
-        currentPrice: number
-    ): TimesFMForecast {
-        const n = history.length;
-        const window = history.slice(-Math.min(n, 30));
-
-        let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-        const m = window.length;
-        for (let i = 0; i < m; i++) {
-            sumX += i;
-            sumY += window[i];
-            sumXY += i * window[i];
-            sumXX += i * i;
-        }
-        const slope = (m * sumXY - sumX * sumY) / (m * sumXX - sumX * sumX || 1);
-
-        let returnSum = 0;
-        const returns: number[] = [];
-        for (let i = 1; i < m; i++) {
-            const r = (window[i] - window[i - 1]) / window[i - 1];
-            returns.push(r);
-            returnSum += r;
-        }
-        const meanReturn = returnSum / (returns.length || 1);
-        const variance = returns.reduce((acc, r) => acc + Math.pow(r - meanReturn, 2), 0) / (returns.length || 1);
-        const vol = Math.sqrt(variance);
-
-        const medianForecast: number[] = [];
-        const lowerQuantile: number[] = [];
-        const upperQuantile: number[] = [];
-
-        for (let step = 1; step <= horizon; step++) {
-            const dampening = Math.exp(-step / 40);
-            const projected = currentPrice + (slope * step * dampening);
-            const uncertainty = vol * Math.sqrt(step) * currentPrice * 1.645;
-
-            medianForecast.push(Number(projected.toFixed(2)));
-            lowerQuantile.push(Number(Math.max(0, projected - uncertainty).toFixed(2)));
-            upperQuantile.push(Number((projected + uncertainty).toFixed(2)));
-        }
-
-        const targetPrice = medianForecast[medianForecast.length - 1];
-        const expectedReturnPct = ((targetPrice - currentPrice) / currentPrice) * 100;
-
-        const trend: 'bullish' | 'bearish' | 'flat' =
-            expectedReturnPct > 1.2 ? 'bullish' :
-            expectedReturnPct < -1.2 ? 'bearish' : 'flat';
-
-        const lastLower = lowerQuantile[lowerQuantile.length - 1];
-        const lastUpper = upperQuantile[upperQuantile.length - 1];
-        const spreadPct = targetPrice > 0 ? (lastUpper - lastLower) / targetPrice : 0.1;
-        const confidence = Math.max(0.1, Math.min(0.95, 1 - (spreadPct * 1.2)));
-
-        return {
-            symbol,
-            contextLength: window.length,
-            horizon,
-            medianForecast,
-            lowerQuantile,
-            upperQuantile,
-            targetPrice,
-            currentPrice,
-            expectedReturnPct,
-            trend,
-            quantileSpreadPct: spreadPct * 100,
-            confidence,
-            engine: 'timesfm-fallback-estimator',
+            isFailSafe: false,
+            holdOnly: false,
         };
     }
 }
