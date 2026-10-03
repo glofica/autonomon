@@ -61,7 +61,19 @@ export {
     DEFAULT_SAFETY_CONFIG,
 } from './safety/safetyLayer.js';
 
-// Autonomous Node DevOps & Self-Funding
+// Autonomous Node DevOps & Self-Funding (Paper §12)
 export { RocksDbPruner, type StorageMetrics, type PruneResult } from './infra/rocksdb-pruner.js';
 export { SecuritySentinel, type SecurityAuditResult } from './infra/security-sentinel.js';
-export { SelfFundingLedger, type InfraExpense, type SelfFundingReport } from './infra/self-funding.js';
+export {
+    SelfFundingLedger,
+    type InfraExpense,
+    type SelfFundingReport,
+    type SegregatedAccounts,
+    type AccountType,
+    type OperatingCostConfig,
+    computeCostHurdle,
+    computeRunwayRatio,
+    computeEffectiveExposureCap,
+    computeMinimumEquityBudget,
+    DEFAULT_OPERATING_CONFIG,
+} from './infra/self-funding.js';
