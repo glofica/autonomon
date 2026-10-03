@@ -47,15 +47,18 @@ function calculateReward(action: string, obs: MarketObservation, forecastTrend: 
     const isBull = obs.price > prev;
     const forecastCorrect = (isBull && forecastTrend === 'bullish') || (!isBull && forecastTrend === 'bearish');
 
-    if (action.startsWith('buy_')) {
+    if (action === 'ACQUIRE_SPOT' || action.startsWith('buy_')) {
         if (isBull) return 15 + (forecastCorrect ? 10 : 0) + Math.random() * 10;
         return -8 - (forecastCorrect ? 0 : 5) - Math.random() * 10;
     }
-    if (action === 'sell_all') {
+    if (action === 'DISPOSE_SPOT' || action === 'sell_all') {
         if (!isBull) return 8 + Math.random() * 8;
         return -4;
     }
-    if (action === 'rebalance') return 2 + Math.random() * 3;
+    if (action === 'PROVIDE_LIQUIDITY' || action === 'REDUCE_INVENTORY' || action === 'rebalance') {
+        return 2 + Math.random() * 3;
+    }
+    // HOLD
     return (Math.random() - 0.5) * 4;
 }
 
