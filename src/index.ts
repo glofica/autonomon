@@ -51,6 +51,16 @@ export { LangtonSoul, type SoulConfig, type ReflectionInput, type SoulReflection
 // Evolution
 export { prepareSpawn, calculateChildFunding, type SpawnConfig, type SpawnResult } from './evolution/spawn.js';
 
+// Safety Layer (Paper §6)
+export {
+    SafetyLayer,
+    type SafetyLayerConfig,
+    type ExecutionSnapshot,
+    type ProposedTransaction,
+    type SafetyCheckResult,
+    DEFAULT_SAFETY_CONFIG,
+} from './safety/safetyLayer.js';
+
 // Autonomous Node DevOps & Self-Funding
 export { RocksDbPruner, type StorageMetrics, type PruneResult } from './infra/rocksdb-pruner.js';
 export { SecuritySentinel, type SecurityAuditResult } from './infra/security-sentinel.js';
