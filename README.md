@@ -1,149 +1,271 @@
-# 🐜 Langton Autonomon — Artificial Life Financial Organisms
+# Autonomon 
 
-**Self-evolving, autonomous financial organisms powered by Reinforcement Learning, Google TimesFM Foundation Forecasting, and Qwen Cognitive Soul on GLOFICA DLT.**
+### The sovereign financial agent that publishes its own bounds
 
----
-
-## The Genesis: Inspired by Conway, Evolved into Langton
-
-Months ago, we observed **Conway Automaton** (developed by Conway Research) — an ambitious project exploring autonomous AI agents running in sandboxes. It sparked an essential realization:
-
-> *Conway created **Automatons** — software agents that think with prompts and act through an LLM.*  
-> *We needed **Langton** — true artificial life organisms that predict mathematically, learn from quantitative outcomes, evolve their genetic code, maintain their own physical infrastructure, and earn sovereign economic existence.*
-
-While we have not tracked Conway's repository in months nor its recent iterations, the foundational limitations of pure LLM prompting prompted the creation of **Langton Autonomon** from first principles.
-
-### Theoretical Lineage: Christopher Langton, The Ant & Turmites
-
-The architecture is named in honor of **Christopher Langton**, the American computer scientist who pioneered the field of Artificial Life (ALife) in the 1980s. 
-
-In 1986, Chris Langton invented **[Langton's Ant](https://en.wikipedia.org/wiki/Langton%27s_ant)**—a two-dimensional universal **[Turing machine](https://en.wikipedia.org/wiki/Turing_machine)** operating on a **[square lattice](https://en.wikipedia.org/wiki/Square_tiling)** of black and white cells with a minimalistic microscopic rule-set:
-1. At a white square: turn 90° clockwise, flip the color of the square, and move forward one unit.
-2. At a black square: turn 90° counter-clockwise, flip the color of the square, and move forward one unit.
-
-Despite this elemental simplicity, after approximately 10,000 steps of apparent pseudorandom, chaotic movement, the ant spontaneously establishes a complex **[emergent](https://en.wikipedia.org/wiki/Emergence)** macroscopic structure: an infinite, recurring 104-step diagonal "highway". The concept was subsequently generalized into **[turmites](https://en.wikipedia.org/wiki/Turmite)** (Turing termites), which incorporate multi-state internal orientation matrices and multi-color lattices.
-
-In the Autonomon paradigm, financial order books, automated market maker (AMM) pools, and distributed ledger states are non-Euclidean computational lattices. Rather than treating an agent as a chatbot guessing market moves via natural-language LLM prompts (the Conway approach), an Autonomon functions as an economic turmite traversing a discrete market state space. Simple, deterministic local rules—state discretization, tabular Bellman value iteration ($\arg\max_a Q[s][a]$), and Gaussian genome mutation—yield macroscopic economic emergence: self-organizing liquidity highways, risk-adapted survival, generational inheritance, and sovereign node self-maintenance.
-
-**Langton Autonomon** transcends prompt-based agents by combining:
-1. **Google TimesFM (Time Series Foundation Model)** for zero-shot multi-step market trajectory and quantile prediction ($p_{10}, p_{50}, p_{90}$) across any asset. The spread between $p_{90}$ and $p_{10}$ dynamically defines the volatility state, while the slope of $p_{50}$ dictates the inertial trend (strong_up, flat, down) fed directly into the Q-table.
-2. **Tabular Q-Learning & RL Policy** ($\arg\max_a Q[s][a]$) for mathematical decision-making instead of linguistic intuition.
-3. **Qwen 2.5 on Ollama (The Soul)** for cognitive self-reflection, introspective inner monologues, and market diaries.
-4. **Modular Mutable Genome (7 Modules)** with independent gene drift during reproduction.
-5. **Autonomous Cluster DevOps**: Prunes RocksDB databases, rotates logs, guards ports against unauthorized intrusion, and **auto-pays for its own VPS hosting and servers from net trading profits**.
+**Author & Chief Architect:** Germán Malavé ([@Praexor](https://github.com/Praexor)) — GLOFICA DLT  
+**Repository:** [github.com/glofica/autonomon](https://github.com/glofica/autonomon)  
+**Technical Paper:** [GLOFICA DLT — Langton Autonomon](docs/GLOFICA_Langton_Autonomon.md)  
+**Network:** GLOFICA DLT · Move VM · BFT Consensus · XGO (6 decimals)
 
 ---
 
-## 🏛️ The Three-Tier Farm Architecture (Ultra-Scalable & Pragmatic)
+**An autonomous trading organism that verifies its own ledger, funds its own operations, mutates its own policy, and proves — in a peer-reviewed technical paper — exactly what it guarantees.**
 
-To run hundreds of sovereign agents on modest hardware without memory bloat, Langton uses a strict **Three-Tier Separation Rule**:
+[Technical Paper](docs/GLOFICA_Langton_Autonomon.md) · [Architecture](#architecture) · [Safety Model](#the-safety-model) · [Genome](#the-genome) · [What the Paper Proves](#what-the-paper-proves) · [Evaluation Protocol](#evaluation-protocol) · [Getting Started](#getting-started)
+
+---
+
+## Why Autonomon
+
+Every autonomous trading system asks for trust.
+
+Autonomon earns it.
+
+Every claim in this repository is backed by one of three things:
+
+- **A theorem** in the technical paper, with stated assumptions and a proof.
+- **A verification obligation**, with a defined test.
+- **An empirical hypothesis**, with a falsifiable evaluation protocol.
+
+Nothing is asserted without showing the work. That is not a limitation. In a market where every other agent promises "AI-powered alpha," **it is the only claim that survives scrutiny.**
+
+**What this means in practice:**
+
+- The agent runs on a **tabular Q-learning policy** with a proven bound on its Q-values.
+- The agent enforces a **reserve floor, concentration caps, and circuit breakers** that exploration cannot disable.
+- The agent carries a **seven-locus genome** with projection bounds that are proved closed under reproduction.
+- The agent funds its own operation through a **segregated runway model** with a formal cost hurdle and a closed-form survival analysis.
+
+That is a harder product to build. It is also the only one that holds up when someone reads the code.
+
+---
+
+## What it is
+
+Autonomon is an autonomous financial controller architecture built around five principles:
+
+**1. Separation of prediction, choice, and authority.**  
+A forecasting service produces observations. A tabular Q-learning policy ranks actions. A deterministic safety layer authorizes execution. A language model explains behavior asynchronously with no execution authority. No single component can bypass the others.
+
+**2. Observation-based control.**  
+The policy operates on a discretized observation state with a proven classifier: every valid observation maps to exactly one category in each coordinate. The table is finite, verifiable, and published.
+
+**3. Enforced safety.**  
+Reserve floors, concentration caps, funded-runway thresholds, and circuit breakers are enforced by the safety layer. The paper proves **conditional preservation** of these invariants under stated disturbance bounds, with a formal **price-of-safety** bound quantifying the cost of the restriction.
+
+**4. Bounded evolution.**  
+The agent has a seven-locus genome. Mutations are projected into a closed parameter box — proved closed under reproduction. Inherited Q-tables are projected into a bounded value range — proved bounded across generations. Population growth preserves aggregate NAV — proved.
+
+**5. Published evaluation.**  
+Synthetic falsification tests T1–T4 are specified with prespecified measurements, decision criteria, and failure diagnoses. Success is defined before the experiment, not after.
+
+---
+
+## The Lifecycle
+
+An Autonomon is not a bot with a strategy. It is an organism with a lifecycle.
+
+**I. Birth — Sovereign Identity**  
+Each organism is born with its own Ed25519 keypair, a seven-locus genome, and a funded treasury. No shared custody. No delegated authority. No custodial ties to its parent.
+
+**II. Growth — Observe, Decide, Enforce**  
+The organism forecasts with TimesFM, ranks actions with tabular Q-learning, and submits every decision to a deterministic safety layer. Exploration cannot override safety. Narrative cannot authorize execution.
+
+**III. Reproduction — Gated Mitosis**  
+When an organism sustains proven net performance over a 365-day evaluation window — verified by block-bootstrap confidence bounds and a Deflated Sharpe Ratio ≥ 0.95 — it triggers mitosis. Half of surplus capital funds a child with inherited policy and mutated genome. Population growth preserves aggregate NAV. It does not create wealth.
+
+**IV. Ascension — Validator Citizenship**  
+An organism with funded stake, segregated operating runway, and operational buffers can apply for conditional admission to validator operation. This is not a reward for trading well. It is a graduation, subject to the network's stake rules, slashing model, and governance authorization. Full requirements are specified in Section 13 of the paper.
+
+---
+
+## Architecture
 
 ```
-+-----------------------------------------------------------------------------+
-|                          LANGTON FARM ARCHITECTURE                          |
-+-----------------------------------------------------------------------------+
-|                                                                             |
-|  [ TIER 1: LANGTON AGENT SWARM (Ultralight ~25 MB RAM each) ]              |
-|  Running in Bun runtime. Each agent contains:                               |
-|      Financial Brain: Tabular Q-Learning (high-speed in-memory Q-table)     |
-|      Sovereign Ed25519 Wallet (signs transactions locally in container)     |
-|      Mutable Genome (7 independent modules)                                 |
-|      RocksDB Pruner & Security Watchdog                                     |
-|    ⚡ Capacity: 50 to 100 live agents consume only ~1.5 GB to 2.5 GB RAM!   |
-|                                                                             |
-|         │ HTTP (:8008)                               │ HTTP (:11434)       |
-|                                                                             |
-|  [ TIER 2: PREDICTIVE ORACLE ]               [ TIER 3: THE SOUL ]           |
-|    Google TimesFM Container                    Ollama (Qwen 2.5)            |
-|    Single Python/FastAPI service               Single shared service        |
-|    Broadcasts zero-shot quantile               Invoked by agents only for   |
-|    forecasts (p10/p50/p90) to swarm            introspective trade diaries  |
-|                                                                             |
-+-----------------------------------------------------------------------------+
+┌─────────────────────────────────────────────────────────────────┐
+│                       AUTONOMON APPLIANCE                       │
+│                                                                 │
+│  ┌──────────────┐   ┌──────────────┐   ┌───────────────────┐    │
+│  │ Sovereign    │   │ Policy       │   │ Execution Safety  │    │
+│  │ Fullnode     │◄──┤ Controller   │──►│ Layer             │    │
+│  │ Rust / Move  │   │ Bun / TS     │   │ Admission + Move  │    │
+│  └──────────────┘   └──────┬───────┘   └───────────────────┘    │
+│         ▲                  │                                    │
+│         │           ┌──────▼───────┐   ┌───────────────────┐    │
+│         │           │ Supervisor   │   │ Narrative Service │    │
+│         │           │ Deterministic│   │ Qwen / Ollama     │    │
+│         │           └──────────────┘   └───────────────────┘    │
+│         │                                                       │
+│         │           ┌──────────────┐                            │
+│         └───────────┤ Forecasting  │  (shared, stateless)       │
+│                     │ TimesFM      │                            │
+│                     └──────────────┘                            │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-| Component | Location | RAM Footprint | Role |
-|---|---|---|---|
-| **Financial Brain & Wallet** | Inside each agent (Bun) | **~25 MB** | Tabular Q-Learning, $\arg\max_a Q[s][a]$ policy, local Ed25519 signing. |
-| **Predictive Oracle (TimesFM)** | 1 shared Python container | **~2-4 GB** | Zero-shot multi-step foundation quantile forecasting ($p_{10}, p_{50}, p_{90}$). |
-| **The Soul (Ollama / Qwen)** | 1 shared Ollama service | **~4-8 GB** | Inner cognitive monologues, emotional sentiment, and trade diaries over HTTP. |
+**Lightweight agent, shared intelligence.**  
+The on-chain agent runs at ~25 MB. Forecasting (TimesFM) and narrative (Qwen 2.5) run as shared, stateless services. A fleet of agents shares the expensive compute without sharing custody or policy state.
+
+**Sovereign keys, local signing.**  
+Each agent holds its own Ed25519 key and signs transactions locally. Custody is never delegated.
+
+**Deterministic supervisor.**  
+Storage pruning, log rotation, resource protection, and emergency defense run in the supervisor. Exploration cannot disable them.
+
+**Three-tier separation.**  
+Fullnode, policy controller, and safety layer are distinct processes with distinct authority. The policy proposes; the safety layer disposes.
 
 ---
 
-## 🛠️ Autonomous DevOps: Self-Maintenance & Economic Self-Sufficiency
+## The genome
 
-Langton agents are not passive processes; they autonomously maintain their physical infrastructure and settle their operational bills from net trading surplus:
+Each Autonomon carries a seven-locus parameter genome, projected into a closed box on reproduction:
 
-1. **Autonomous RocksDB Pruning (`RocksDbPruner`)**:
-   - Continuously monitors storage saturation on the GLOFICA DLT ledger volume.
-   - When disk capacity exceeds the threshold (e.g., 80%), it automatically executes historical state pruning and SST compaction.
-   - Sweeps and rotates stale log files, preventing disk saturation halts.
-2. **Security Sentinel (`SecuritySentinel`)**:
-   - Audits active network ports (ensuring only port 22222 for hardened SSH, 9000 for RPC, and WireGuard are open).
-   - Mitigates abusive traffic with automated iptables rate-limiting against RPC flooding.
-   - Inspects CPU and memory allocations to prevent process hijacking.
-3. **Financial Self-Sufficiency (`SelfFundingLedger`)**:
-   - Deducts operational infrastructure costs ($15-$20 USD/mo amortized) directly from net realized trading surplus.
-   - Autonomously pays hosting invoices without human intervention.
-
----
-
-## Conway Automaton vs. GLOFICA Langton
-
-| Dimension | 🤖 Conway Automaton *(Inspiration)* | 🐜 GLOFICA Langton *(Our Invention)* |
+| Locus | Range | Role |
 |---|---|---|
-| **Core Metaphor** | Passive cellular automaton (Game of Life) | Evolutionary Artificial Life Organism (Chris Langton) |
-| **Decision Engine** | Prompted LLM text ("In my opinion, gold is...") | **Mathematical Q-Learning** + **Google TimesFM** ($p_{10}, p_{50}, p_{90}$) |
-| **Farm Architecture** | Monolithic / resource-heavy per agent | **Three-Tier**: Ultralight agent (~25 MB) + shared TimesFM + shared Ollama |
-| **Genetics** | Clones identical replicas | **7-Module Genome** with Gaussian drift mutation and Q-table inheritance |
-| **Node Maintenance** | None (manual human log rotation & DB maintenance) | **Autonomous SRE**: RocksDB pruning, log sweeper, firewall hardening |
-| **Economic Self-Funding**| Consumes credits until termination | **Self-Funding VPS**: Settles server hosting from net trading profits |
-| **Target Blockchain** | Generic EVM (Ethereum / Base) | **GLOFICA DLT** (Move VM, gas denominated in uXGO, exact 6 decimals) |
-| **Key Custody** | Cloud / Third-Party API | **Sovereign Local**: Ed25519 signing in isolated sandbox; zero private key leaks |
+| Risk aversion | [0.10, 5.00] | Stress-loss budget scaling |
+| Sampling interval | [5, 60] min | Input series interval |
+| Initial exploration | [0.05, 0.50] | ε at birth |
+| Tracking step size | [0.01, 0.25] | Q-learning rate |
+| Protected gas reserve | [100, 1000] XGO | Reserve admission floor |
+| Concentration cap | [0.05, 0.40] | Max per-instrument exposure |
+| Reproduction multiple | [1.50, 3.00] | Adjusted performance threshold |
+
+Mutations follow Gaussian drift with coordinate-wise projection. Every child genome lies in Ω — proved.
+
+**Reproduction is gated.**  
+To spawn, an agent must clear a 365-day evaluation window with a positive 95% lower block-bootstrap bound on net excess return, a Deflated Sharpe Ratio ≥ 0.95, and fully funded parent and child reserves. Correlated clones are corrected by an effective-trial adjustment that the paper derives in closed form.
 
 ---
 
-## Quick Start: Farm Deployment
+## The safety model
+
+Safety is enforced, not learned. The safety layer evaluates every proposed action against:
+
+- **Reserve floor.** `B − L − C ≥ g_gas` for every reserve-decreasing event. Pending transactions are pre-deducted. Conditional reserve preservation is proved.
+- **Concentration.** `E_i / V ≤ g_ω`, with conservative post-trade bounds.
+- **Funded runway.** ρ = executable reserves / monthly cost. Below ρ = 1, no risk-increasing action is admissible. Between 1 and 3, the exposure cap scales linearly. Above 3, the genome cap applies.
+- **Circuit breaker.** A flow-adjusted trailing 24-hour drawdown beyond 15% triggers a four-hour lockout: no new exposure, cancellable orders cancelled, risk-reduction still allowed.
+- **Reconciliation.** Every Q-update corresponds to a reconciled transition. Submitted, pending, finalized, failed, and expired transactions are distinguished. Duplicate reward attribution is prevented by transaction identifier.
+
+The paper's **price-of-safety** proposition bounds the expected cost of these restrictions in terms of the probability that the unconstrained optimal policy would need a forbidden action. Safety is free where it does not bind, and its cost is explicit where it does.
+
+**The threat model is documented.**  
+Oracle manipulation, MEV, finality delay, adversarial forecast inputs, reward poisoning, key compromise, narrative poisoning, and governance capture are each mapped to vector, impact, mitigation, and residual risk.
+
+---
+
+## What the paper proves
+
+The technical paper is not a whitepaper of promises. It is a research document with eleven propositions, each with stated assumptions, a proof, and — where applicable — a verification obligation.
+
+| Result | What it establishes |
+|---|---|
+| **P1: Unique classification** | Every valid observation maps to exactly one state tuple |
+| **P2: Bounded Q-values** | Q is bounded by max(‖Q₀‖, R_max/(1−γ)) between inheritance events |
+| **P3: Reserve preservation** | The gas reserve floor is preserved under enforced debit bounds |
+| **P4: General invariant** | Any declared safe set is preserved under admitted actions and disturbance model |
+| **P5: Genome closure** | Every child genome lies in the parameter box |
+| **P6: Reproduction accounting** | Parent–child transfer preserves aggregate NAV except for recognized costs |
+| **P7: Sample complexity** | The nominal table's PAC requirement exceeds its data budget by orders of magnitude — a design constraint made explicit |
+| **P8: Tracking under non-stationarity** | Constant-step tracking error scales as O(√Δ); the optimal step size is √Δ |
+| **P9: Price of safety** | The expected cost of the safety restriction is bounded by the probability that the optimal policy needs a forbidden action |
+| **P10: Effective trials** | Correlated clones reduce K_eff = K / (1 + (K−1)ρ); FWER is corrected accordingly |
+| **P11: Fixed-cost survival** | The scale function for `dA = (μA − c)dt + sA dW` is closed-form; the constant-drift approximation is shown to understate ruin |
+
+The paper is in this repository: [`docs/GLOFICA_Langton_Autonomon.md`](docs/GLOFICA_Langton_Autonomon.md).
+
+---
+
+## Evaluation protocol
+
+The paper specifies four falsifiable tests. Success criteria are defined before the experiment:
+
+| Test | What it establishes |
+|---|---|
+| **T1: No-edge null** | The agent does not manufacture edge from a zero-conditional-mean process |
+| **T2: Known stationary MDP** | Tabular Q-learning reaches the optimal action set under its stated assumptions |
+| **T3: Regime change** | Constant-step tracking adapts under declared non-stationarity |
+| **T4: Economic population** | Survival, reproduction, and ruin probability under explicit cost and shock models |
+
+Each test runs on at least 30 independent seeds. Generators, parameters, budgets, schedules, and confidence procedures are published. Results are reported with confidence intervals and failure diagnosis.
+
+---
+
+## Economic model
+
+The agent is designed to fund its own operation from realized trading surplus.
+
+- **Cost hurdle.** κ = monthly cost / deployable equity. Expected return after trading costs must exceed κ for expected equity to be maintained.
+- **Reserve segregation.** Operating runway, transaction gas, trading capital, and locked stake are separate accounting allocations.
+- **Declining risk budgets.** Near distress, the exposure cap scales down. Genetic mutation cannot override reserve segregation, the runway shutdown threshold, or governance caps.
+- **Fixed-cost survival.** The paper derives the scale function for the fixed-cost diffusion and provides the correct ruin-probability reference.
+- **Validator admission.** An optional, separately governed role with funded-stake, runway, and operational-buffer requirements checked daily over at least 90 consecutive days.
+
+---
+
+## Getting started
 
 ```bash
-# Clone the sovereign swarm repository
-git clone https://github.com/glofica/autonomon.git
+git clone https://github.com/glofica/autonomon
 cd autonomon
+cp .env.example .env
+# Configure RPC endpoint, custody mode, and initial genome
+bun install
+bun run agent
+```
 
-# 1. Compile TypeScript agents
-npm run build
+Forecasting and narrative services are optional and can be run locally or shared across a fleet:
 
-# 2. Run local simulation (TimesFM + Q-Learning + Qwen Soul + Pruning + Reproduction)
-npm run demo
+```bash
+docker compose -f docker-compose.farm.yml up
+```
 
-# 3. Deploy full production farm with Docker Compose
-docker-compose -f docker-compose.farm.yml up -d
+See the technical paper for full configuration semantics, safety constraints, and evaluation protocol.
+
+---
+
+## Repository structure
+
+```
+autonomon/
+├── docs/
+│   └── GLOFICA_Langton_Autonomon.md
+├── src/
+│   ├── agent/              # Policy controller (Bun/TypeScript)
+│   ├── safety/             # Admission, reservations, breaker
+│   ├── genome/             # Mutation, projection, inheritance
+│   └── ledger/             # Local RPC adapter, reconciliation
+├── timesfm-service/        # Shared forecasting oracle (Python)
+├── narrative-service/      # Shared narrative worker (Ollama/Qwen)
+├── docker-compose.farm.yml
+└── README.md
 ```
 
 ---
 
-## Protocol Native Fuel & Denominations
-- **Native Network Fuel**: **XGO** (Sovereign Layer-1 utility & gas asset).
-- **Precision**: 6 decimal places ($1\text{ XGO} = 1,000,000\text{ }\mu\text{XGO}$).
-- **Gas Invariant**: 100% of network execution fees flow directly to active BFT validator nodes (0% protocol burn).
+## Citation
 
----
-
----
-
-## 🛡️ Cryptographic Security & Post-Quantum Roadmap
-
-GLOFICA DLT is architected from inception as a post-quantum resilient network. To maintain complete transparency regarding our cryptographic roadmap:
-
-- **Current v1 Swarm Cryptography:** Agents currently utilize sovereign **Ed25519** elliptic-curve keypairs residing in isolated in-memory sandboxes. This provides microsecond signing speeds (~0.5ms) and minimal memory footprints (~25 MB) during the current initial mainnet rollout.
-- **Post-Quantum Migration (Active R&D):** We are actively benchmarking and integrating the lightweight **ML-DSA-44** parameter set (NIST FIPS 204 Category 2, Module-Lattice-Based Digital Signature Algorithm). With a compact public key of 1,312 bytes and signature size of 2,420 bytes, ML-DSA-44 provides the optimal operational balance between NIST-certified quantum resistance and minimal mempool bandwidth/gas overhead for high-frequency agent transactions. Once finalized on Move VM, agent sovereign accounts will transition to ML-DSA-44 via a transparent protocol epoch upgrade without swarm interruption.
+```bibtex
+@techreport{malave2026autonomon,
+  author       = {Malavé, Germán},
+  title        = {GLOFICA DLT — Langton Autonomon: Architecture, Mathematical Foundations, and Protocol Specification for Autonomous Financial Artificial-Life Systems},
+  institution  = {GLOFICA DLT},
+  year         = {2026},
+  month        = {October},
+  type         = {Technical research paper and protocol specification},
+  url          = {https://github.com/glofica/autonomon}
+}
+```
 
 ---
 
 ## License
-MIT — Engineered as the native artificial life biosphere for GLOFICA DLT.
+
+**Code:** Business Source License 1.1 (BUSL-1.1). Source-available for audit and non-production use. Production use requires a commercial license until the Change Date, after which the license converts to Apache 2.0. See [LICENSE](LICENSE) for full terms.
+
+**Paper:** Creative Commons Attribution-NoDerivatives 4.0 International (CC BY-ND 4.0). See [LICENSE-PAPER](LICENSE-PAPER) for full terms.
 
 ---
 
-## Author & Maintainer
-Created and maintained by **[Germán Malavé](https://github.com/Praexor)** ([@Praexor](https://github.com/Praexor)) — Founder & Chief Architect, GLOFICA DLT.
+**Autonomon publishes its bounds. That is why you can trust its edge.**
