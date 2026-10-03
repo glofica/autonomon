@@ -532,9 +532,62 @@ $$
 
 ## 8. Sovereign appliance architecture and metabolic operations
 
-**[D]** The appliance architecture comprises a Rust fullnode and a Bun/TypeScript controller. A Python forecasting worker and an optional Qwen/Ollama narrative worker may be shared. Use bounded asynchronous queues, timeouts, backpressure, and stale-response rejection. A shared forecasting worker creates an availability dependency even when ledger verification is local.
+**[D]** The architecture is organized into three tiers. Tier 1 is the sovereign organism. Tiers 2 and 3 are shared, stateless services. The separation is a design invariant: it keeps the agent small, keeps custody local, and allows a fleet to share expensive compute without sharing keys, policy state, or ledger authority.
 
-**[V]** Fullnodes do not vote as validators merely by following the ledger. They nevertheless consume dissemination bandwidth, storage, synchronization resources, and serving capacity. Capacity planning measures these costs separately from committee finalization. Consensus complexity depends on the actual BFT protocol, topology, batching, and implementation.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  AUTONOMON APPLIANCE (Docker container)                             │
+│                                                                     │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  TIER 1 — SOVEREIGN OPERATIONAL CORE (Bun/TS, ~25 MB)         │  │
+│  │                                                               │  │
+│  │  ┌────────────┐  ┌──────────────┐  ┌───────────────────────┐  │  │
+│  │  │ Q-Policy   │──│ Safety Layer │──│ Execution Adapter     │  │  │
+│  │  │ (tabular)  │  │ (admission)  │  │ (Move tx builder)     │  │  │
+│  │  └────────────┘  └──────────────┘  └───────────────────────┘  │  │
+│  │        ▲                ▲                     ▲               │  │
+│  │        │                │                     │               │  │
+│  │  ┌─────┴─────┐  ┌───────┴────────┐  ┌─────────┴────────────┐  │  │
+│  │  │ Genome +  │  │ SRE Supervisor │  │ Ed25519 Keystore     │  │  │
+│  │  │ Mutation  │  │ (deterministic)│  │ (RAM only, no disk)  │  │  │
+│  │  └───────────┘  └────────────────┘  └──────────────────────┘  │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  SOVEREIGN FULLNODE (Rust / Tokio / Move VM)                  │  │
+│  │  Ledger sync · Local verification · Tx submission             │  │
+│  │  Non-validating by default                                    │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│                              ▲                                      │
+│                              │ local RPC / IPC                      │
+└──────────────────────────────┼──────────────────────────────────────┘
+                               │
+              ┌────────────────┼─────────────────┐
+              │                                  │
+              ▼                                  ▼
+┌──────────────────────────────┐   ┌──────────────────────────────┐
+│  TIER 2 — TIMESFM ORACLE     │   │  TIER 3 — COGNITIVE SOUL     │
+│  (Python, shared VPS)        │   │  (Ollama + Qwen 2.5, shared) │
+│                              │   │                              │
+│  Quantiles p10 / p50 / p90   │   │  Narrative · Diary · Audit   │
+│  Critical dependency         │   │  Best-effort · No authority  │
+│  Fail-safe → HOLD-only       │   │  Async · Never blocks        │
+└──────────────────────────────┘   └──────────────────────────────┘
+```
+
+**[D] Tier 1 — Sovereign Operational Core.** The agent itself, in Bun/TypeScript at approximately 25 MB. It contains the tabular Q-policy, the execution safety layer, the genome and mutation operator, the deterministic SRE supervisor, and the volatile Ed25519 keystore. The policy proposes actions. The safety layer authorizes or rejects them. The supervisor handles storage pruning, log rotation, resource protection, and emergency defense without being subject to exploration. The keystore never persists keys to disk.
+
+**[D] Sovereign Fullnode.** A Rust / Tokio / Move VM process that runs in the same container as Tier 1, connected by local RPC or IPC. It synchronizes and verifies the ledger and submits transactions. It is non-validating by default. It does not vote as a validator merely by following the ledger, and its local verification and RPC service are distinct from committee voting and finalization.
+
+**[D] Tier 2 — TimesFM Oracle.** A shared Python service on an external VPS. It supplies timestamped quantile forecasts (p10, p50, p90) at the configured sampling interval. It is a **critical dependency**: if it is unreachable, the agent enters HOLD-only fail-safe. It never falls back to a local regression or an arbitrary market bucket.
+
+**[D] Tier 3 — Cognitive Soul.** A shared Ollama + Qwen 2.5 service on an external VPS. It generates narrative, diary, and audit summaries asynchronously. It has **zero execution authority** and is **best-effort**: if it is unreachable, the agent continues operating normally and protective actions are never delayed by narrative generation.
+
+**[A] Why the tiers are separated.** The forecasting service is compute-heavy and shared across the fleet. The narrative service is large and shared. Neither needs access to keys, policy state, or the ledger. Both can be externalized without weakening the agent's custody model. The Tier 1 core stays small, sovereign, and self-contained.
+
+**[V]** A shared forecasting worker creates an availability dependency even when ledger verification is local. If Tier 2 is externalized, redundancy and failover are operational requirements, not optional. A shared narrative worker creates no execution dependency, but it does create a correlated availability surface across the fleet.
+
+**[V]** Use bounded asynchronous queues, timeouts, backpressure, and stale-response rejection for all cross-tier communication. Every cross-tier call must have an explicit timeout and a defined fail-safe behavior.
 
 **[V]** CPU, RAM, inference memory, local query latency, and finality figures are deployment measurements to be established, not mathematical consequences of table size. Record hardware, software versions, workload, percentiles, model configuration, and concurrency for every benchmark.
 
@@ -548,20 +601,22 @@ $$
 
 ### 8.1 Runtime responsibilities
 
-| Component | Runtime | Responsibility | Interface |
-|---|---|---|---|
-| Sovereign fullnode | Rust / Tokio / Move VM | Ledger synchronization, verification, transaction submission | Local RPC or IPC |
-| Policy controller | Bun / TypeScript | Features, Q policy, reward attribution, bounded evolution | Local ledger adapter and forecast API |
-| Forecasting oracle | Python / TimesFM | Timestamped point and quantile forecasts | Batched HTTP service |
-| Execution safety layer | Controller and on-chain modules | Admission, reservations, capabilities, settlement bounds | Transaction builder and Move execution |
-| Operational supervisor | Appliance services | Resource monitoring, supported pruning, billing, recovery | Node administration and provider APIs |
-| Narrative service | Qwen / Ollama | Sanitized diary and explanatory summaries | Asynchronous event queue |
+| Tier | Component | Runtime | Responsibility | Interface |
+|---|---|---|---|---|
+| 1 | Policy controller | Bun / TypeScript | Features, Q policy, reward attribution, bounded evolution | Local ledger adapter and forecast API |
+| 1 | Execution safety layer | Controller and on-chain modules | Admission, reservations, capabilities, settlement bounds | Transaction builder and Move execution |
+| 1 | Operational supervisor | Appliance services | Resource monitoring, supported pruning, billing, recovery | Node administration and provider APIs |
+| — | Sovereign fullnode | Rust / Tokio / Move VM | Ledger synchronization, verification, transaction submission | Local RPC or IPC |
+| 2 | Forecasting oracle | Python / TimesFM | Timestamped point and quantile forecasts | Batched HTTP service |
+| 3 | Narrative service | Qwen / Ollama | Sanitized diary and explanatory summaries | Asynchronous event queue |
 
-**[V]** The fullnode remains a non-validating ledger follower unless explicitly enrolled under the network's validator protocol. Its local verification and RPC service are distinct from committee voting and finalization.
+The fullnode remains a non-validating ledger follower unless explicitly enrolled under the network's validator protocol. Its local verification and RPC service are distinct from committee voting and finalization.
 
 ### 8.2 Operational lifecycle
 
 **[D]** An organism progresses through provisioning, synchronization, funded activation, constrained operation, reproduction eligibility, and suspension or termination. Activation requires healthy ledger synchronization, a configured custody mechanism, funded operating commitments, and successful execution-adapter checks. Reproduction provisions an independently identified child and transfers capital under Section 7. Recovery restores reconciled state before trading resumes.
+
+**[V]** The lifecycle stages in Section 1 and the four-stage narrative (Birth, Growth, Reproduction, Ascension) describe the same progression at two levels of detail. Ascension corresponds to conditional admission to validator operation under Section 13; it is not a reward for trading success and is not granted by the agent itself.
 
 ---
 
