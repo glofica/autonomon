@@ -86,6 +86,8 @@ The design combines:
 5. An operational supervisor that handles node health and hosting.
 6. An optional narrative service with read-only access to sanitized telemetry.
 
+The architecture is organized into three tiers. Tier 1 (sovereign operational core) contains the policy, safety layer, genome, supervisor, and keystore. Tiers 2 and 3 (TimesFM oracle, cognitive soul) are shared, stateless services external to the agent. See §8.
+
 TimesFM [5] is the forecasting component, not an assumed source of profitable information. Its exact version, checkpoint, preprocessing, quantile behavior, and inference configuration must be recorded. Q-learning is a numerical policy method; removing a language model from the execution path does not remove market uncertainty, numerical errors, stale data, or software defects.
 
 The controller can support different assets through adapters. This does not make all assets interchangeable: prices, redemption rights, transfer restrictions, liquidity, maturities, and oracle risks require instrument-specific handling. An object identifier alone does not establish economic value or legal eligibility.
