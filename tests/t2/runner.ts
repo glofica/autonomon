@@ -148,7 +148,10 @@ export async function runOneSeed(
       agreementCount++;
     }
 
-    // Regret: Q*(s, a*) - Q*(s, a_agent)
+    // Regret uses Q* (ground truth from value iteration), not the agent's
+    // Q-table. Using Q_agente would yield zero regret by construction,
+    // making the metric meaningless. See paper §14.
+    // Formula: Regret(s) = Q*(s, pi*(s)) - Q*(s, pi_hat(s))
     const regretS = viResult.qStar[s][starBestA] - viResult.qStar[s][agentBestA];
     totalRegret += Math.max(0, regretS);
 

@@ -9,6 +9,11 @@
 export interface SeedMetricResult {
   seed: number;
   supNormQError: number;
+  /**
+   * Action-value regret: (1 / |S|) * sum_{s} [ Q*(s, pi*(s)) - Q*(s, pi_hat(s)) ]
+   * Uses ground truth Q* from value iteration evaluated at the agent's chosen policy
+   * pi_hat(s) = argmax_a Q_agent(s, a).
+   */
   actionValueRegret: number;
   optimalActionAgreement: number; // 0.0 to 1.0 (fraction of states)
   totalTransitions: number;
