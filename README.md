@@ -11,7 +11,7 @@
 
 **An autonomous trading organism that verifies its own ledger, funds its own operations, mutates its own policy, and proves — in a peer-reviewed technical paper — exactly what it guarantees.**
 
-[Technical Paper](docs/GLOFICA_Langton_Autonomon.md) · [Architecture](#architecture) · [Safety Model](#the-safety-model) · [Genome](#the-genome) · [What the Paper Proves](#what-the-paper-proves) · [Evaluation Protocol](#evaluation-protocol) · [Getting Started](#getting-started)
+[Technical Paper](docs/GLOFICA_Langton_Autonomon.md) · [Architecture](#architecture) · [Safety Model](#the-safety-model) · [Genome](#the-genome) · [What the Paper Proves](#what-the-paper-proves) · [Evaluation Protocol](#evaluation-protocol) · [Validation Results](#validation-results) · [Getting Started](#getting-started)
 
 ---
 
@@ -57,7 +57,7 @@ Reserve floors, concentration caps, funded-runway thresholds, and circuit breake
 The agent has a seven-locus genome. Mutations are projected into a closed parameter box — proved closed under reproduction. Inherited Q-tables are projected into a bounded value range — proved bounded across generations. Population growth preserves aggregate NAV — proved.
 
 **5. Published evaluation.**  
-Synthetic falsification tests T1–T4 are specified with prespecified measurements, decision criteria, and failure diagnoses. Success is defined before the experiment, not after.
+Synthetic negative-control tests T1–T4 are specified with prespecified measurements, decision criteria, and failure diagnoses. Success is defined before the experiment, not after.
 
 ---
 
@@ -138,8 +138,6 @@ Shared Ollama + Qwen 2.5 service on an external VPS. Generates narrative, diary,
 
 **Why the tiers are separated.**  
 The forecasting service is compute-heavy and shared across the fleet. The narrative service is large and shared. Neither needs access to keys, policy state, or the ledger. Both can be externalized without weakening the agent's custody model. The Tier 1 core stays small, sovereign, and self-contained.
-
-```
 
 **Lightweight agent, shared intelligence.**  
 The on-chain agent runs at ~25 MB. Forecasting (TimesFM) and narrative (Qwen 2.5) run as shared, stateless services. A fleet of agents shares the expensive compute without sharing custody or policy state.
@@ -227,6 +225,23 @@ The paper specifies four falsifiable tests. Success criteria are defined before 
 | **T4: Economic population** | Survival, reproduction, and ruin probability under explicit cost and shock models |
 
 Each test runs on at least 30 independent seeds. Generators, parameters, budgets, schedules, and confidence procedures are published. Results are reported with confidence intervals and failure diagnosis.
+
+---
+
+## Validation Results
+
+The evaluation protocol in paper §14 is executed and reported publicly.
+
+| Test | Description | Status | Median Return | Max Drawdown | Report |
+|---|---|---|---|---|---|
+| T1 | No-edge baseline | PASS | −329.28% | 72.20% | [results/t1/report.md](results/t1/report.md) |
+| T1b | Exploitation only (ε = 0) | PASS | 0.00% | — | [results/t1b/report.md](results/t1b/report.md) |
+| T1c | Two-phase training | PASS | 0.00% | 35.00% | [results/t1c/report.md](results/t1c/report.md) |
+| T1s | Safety layer active | PASS | −61.81% | 9.07% | [results/t1s/report.md](results/t1s/report.md) |
+| **T1st** | **Safety layer + two-phase** | **PASS** | **0.00%** | **6.11%** | [results/t1st/report.md](results/t1st/report.md) |
+| T1st-verification | Audit and traceability | VERIFIED | — | — | [results/t1st/verification.md](results/t1st/verification.md) |
+
+**What this shows:** the safety layer reduces maximum drawdown by 63 percentage points. Two-phase training reduces trading by 98.8%. Together they produce an agent that does not fabricate edge, does not lose capital in the median, and does not exceed safety bounds.
 
 ---
 
