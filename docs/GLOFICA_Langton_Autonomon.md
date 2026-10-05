@@ -919,6 +919,41 @@ The paper does not establish universal computation, unrestricted survival, or au
 
 ---
 
+## 18. Roadmap
+
+The current specification is long-only and operates on a single instrument per agent. The following capabilities are planned, ordered by priority. Each will be specified in a future revision of this document and validated with its own falsifiable test suite.
+
+### 18.1 Short capability
+
+Add two actions to the action space: `ENTER_SHORT` and `EXIT_SHORT`. Extend the state vector with a short-exposure coordinate. The design will mirror the long-side treatment: symmetric entry conditions, concentration caps applied to net exposure, and reserve-floor preservation for collateral.
+
+Expected impact:
+- Action space: 5 → 7 actions.
+- State cardinality: 2,160 → 6,480 states (3 short-exposure categories).
+- Q-table: 10,800 → 45,360 entries.
+- Paper revisions: §3.5 (position labels), §4 (action space), §6 (collateral admission).
+
+### 18.2 Multi-instrument portfolio
+
+Extend the state vector with an instrument-selection coordinate so a single agent can operate on multiple on-chain assets simultaneously. The concentration cap `g_ω` will apply per instrument; the aggregate exposure across instruments will be bounded by a separate portfolio-level constraint.
+
+### 18.3 Additional venue adapters
+
+- **Canton Network** — institutional-grade asset interoperability.
+- **Base L2** — Ethereum-aligned tokenized assets.
+
+Each adapter implements the same `AssetAdapter` interface defined in §1.1. Adapter-specific extensions (custody modes, settlement finality, gas accounting) will be documented separately.
+
+### 18.4 Validator admission protocol
+
+A formal specification of the network-level rules that govern conditional admission to validator operation, including stake requirements, slashing parameters, and the daily checkpoint procedure described in §13. This section will reference a pinned GLOFICA protocol specification once one is published.
+
+### 18.5 Short-capability test suite (T5)
+
+A fifth falsifiable test that validates the short capability under the same negative-control discipline as T1. Success criteria: the agent does not fabricate short edge from a zero-conditional-mean process, and the safety layer bounds the drawdown from short exposure.
+
+---
+
 ## References
 
 [1] Watkins, C. J. C. H., and Dayan, P. (1992). "Q-learning." *Machine Learning*, 8, 279–292. https://doi.org/10.1007/BF00992698 . Author-hosted record: https://www.gatsby.ucl.ac.uk/~dayan/papers/wd92.html .
