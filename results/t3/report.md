@@ -1,6 +1,6 @@
 # T3 Regime Change Test Suite Report
 
-**Date:** 2026-10-05T19:55:54.972Z
+**Date:** 2026-10-05T20:10:17.536Z
 
 **Specification:** Paper §14 (Regime Change) & Proposition 8 (Non-Stationary Tracking)
 
@@ -91,5 +91,5 @@
 
 ## Methodological Note: Sustained Tolerance Window
 
-Adaptation delay is defined as the first step of a sustained window of 100 consecutive steps with regret below the 0.05 threshold, per paper §14 ("remain within tolerance for a fixed duration"). Pointwise crossing (N = 1) is reported for reference. The median for constant-step is 156 steps under the sustained definition, unchanged for N ≥ 100, indicating that once the agent crosses, its policy is absorbing.
+Adaptation delay is defined as the first step of a sustained window of 100 consecutive steps with regret below the 0.05 threshold, per paper §14 ("remain within tolerance for a fixed duration"). Pointwise crossing (N = 1) is reported for reference. The median for constant-step is 146 steps under the sustained definition, unchanged for N ≥ 100, indicating that once the agent crosses, its policy is absorbing.
 

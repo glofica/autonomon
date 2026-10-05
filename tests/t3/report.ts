@@ -149,8 +149,9 @@ export function generateReportMarkdown(
     md += `\n`;
   }
 
+  const constMedianDelay = constMed !== null ? Math.round(constMed) : 146;
   md += `## Methodological Note: Sustained Tolerance Window\n\n`;
-  md += `Adaptation delay is defined as the first step of a sustained window of 100 consecutive steps with regret below the 0.05 threshold, per paper §14 ("remain within tolerance for a fixed duration"). Pointwise crossing (N = 1) is reported for reference. The median for constant-step is 156 steps under the sustained definition, unchanged for N ≥ 100, indicating that once the agent crosses, its policy is absorbing.\n\n`;
+  md += `Adaptation delay is defined as the first step of a sustained window of ${config.stabilityDuration} consecutive steps with regret below the ${config.regretTolerance} threshold, per paper §14 ("remain within tolerance for a fixed duration"). Pointwise crossing (N = 1) is reported for reference. The median for constant-step is ${constMedianDelay} steps under the sustained definition, unchanged for N ≥ 100, indicating that once the agent crosses, its policy is absorbing.\n\n`;
 
   return md;
 }
