@@ -63,6 +63,21 @@ export const T4_SHOCK_SCENARIO_B: ShockModelConfig = {
   tailJumpVol: 0.04,          // 4% tail shock dispersion
 };
 
+/**
+ * Scenario C: Positive Drift (+1% monthly bull market per Paper §14)
+ */
+export const T4_SHOCK_SCENARIO_C: ShockModelConfig = {
+  name: 'Scenario C (Positive Drift, +1%/month bull market)',
+  marketDrift: 0.12,          // +1% monthly = +12% annualized drift
+  marketVol: 0.30,            // 30% annualized volatility
+  idiosyncraticVol: 0.25,     // 25% annualized idiosyncratic vol
+  correlationRho: 0.50,       // rho = 0.50 per Proposition 10
+  enableFatTails: true,       // Fat tails enabled
+  tailJumpProb: 0.02,         // 2% daily probability
+  tailJumpMean: -0.12,        // -12% mean tail shock
+  tailJumpVol: 0.04,          // 4% tail shock dispersion
+};
+
 export const T4_DEFAULT_SHOCK_CONFIG: ShockModelConfig = T4_SHOCK_SCENARIO_A;
 
 /**

@@ -1,22 +1,12 @@
 /**
- * T4 — Economic Population: Simulation Runner (Phase 1 Skeleton - Calibrated)
+ * T4 — Economic Population: Simulation Runner (Phase 1 Skeleton - Three Scenarios)
  *
  * Paper Reference: GLOFICA_Langton_Autonomon.md §7, §12, §14 (T4).
  *
- * Temporal Execution Loop:
- *   For each time step t = 0 ... N - 1:
- *     1. Agents observe state (past market signal + current inventory) and select actions.
- *     2. Correlated asset returns are generated (common factor + idiosyncratic + fat-tail jumps).
- *     3. For each living agent:
- *        a. Transition inventory position
- *        b. Realize trading PnL and trade fees
- *        c. Deduct operating costs ($22/mo proportional to dt)
- *        d. Evaluate solvency (capital <= 0 -> death / financial termination)
- *        e. Update tabular Q-learning policy with log return reward
- *     4. Reproduction gate (Phase 1):
- *        If capital >= 1.5 * initialCapital:
- *          Spawn child with 50% surplus transfer (Proposition 6 capital conservation)
- *     5. Update living counts and event logs
+ * Scenarios:
+ *   - Scenario A: Pure Martingale (drift = 0%)
+ *   - Scenario B: Negative Drift (-2%/month bear market)
+ *   - Scenario C: Positive Drift (+1%/month bull market)
  */
 
 import {
@@ -35,11 +25,12 @@ import {
   type ShockModelConfig,
   T4_SHOCK_SCENARIO_A,
   T4_SHOCK_SCENARIO_B,
+  T4_SHOCK_SCENARIO_C,
   generateStepShocks,
 } from './shocks.js';
 import { SeededPRNG } from '../t2/runner.js';
 import { computeT4Metrics, type T4Metrics, type SeedPopulationResult } from './metrics.js';
-import { writeDualScenarioReport } from './report.js';
+import { writeTriScenarioReport } from './report.js';
 
 export interface PopulationEvent {
   step: number;
@@ -69,6 +60,13 @@ export const T4_CONFIG_SCENARIO_B: T4Config = {
   seedsCount: 30,
 };
 
+export const T4_CONFIG_SCENARIO_C: T4Config = {
+  population: T4_DEFAULT_POPULATION_CONFIG,
+  costs: T4_DEFAULT_COST_CONFIG,
+  shocks: T4_SHOCK_SCENARIO_C,
+  seedsCount: 30,
+};
+
 export const T4_DEFAULT_CONFIG: T4Config = T4_CONFIG_SCENARIO_A;
 
 export interface T4ScenarioResult {
@@ -78,9 +76,10 @@ export interface T4ScenarioResult {
   metrics: T4Metrics;
 }
 
-export interface T4DualReport {
+export interface T4TriReport {
   scenarioA: T4ScenarioResult;
   scenarioB: T4ScenarioResult;
+  scenarioC: T4ScenarioResult;
   passed: boolean;
   reportPath: string;
 }
@@ -92,6 +91,13 @@ function getNextInventory(currInv: 'FLAT' | 'LIGHT' | 'HEAVY', action: string): 
   }
   if (action === 'DISPOSE_SPOT') {
     return 'FLAT';
+  }
+  if (action === 'REDUCE_INVENTORY') {
+    if (currInv === 'HEAVY') return 'LIGHT';
+    return 'FLAT';
+  }
+  if (action === 'PROVIDE_LIQUIDITY') {
+    return 'LIGHT';
   }
   return currInv;
 }
@@ -167,7 +173,7 @@ export async function runOnePopulationSeed(
       const stateKey = `${observedMarketSignal}_${agent.inventoryState}`;
       const action = agent.ql.selectAction(stateKey);
       const nextInv = getNextInventory(agent.inventoryState, action);
-      const isTrade = action === 'ACQUIRE_SPOT' || action === 'DISPOSE_SPOT';
+      const isTrade = action === 'ACQUIRE_SPOT' || action === 'DISPOSE_SPOT' || action === 'REDUCE_INVENTORY';
       const tradeFee = isTrade ? agent.capital * (config.costs.tradeFeeBps / 10000) : 0.0;
       if (isTrade) agent.tradesCount++;
 
@@ -222,7 +228,7 @@ export async function runOnePopulationSeed(
 
     observedMarketSignal = realizedMarketSignal;
 
-    // 4. Reproduction check: capital >= 1.5 * initialCapital
+    // 4. Reproduction check: capital >= 1.5 * initialCapital ($3,000 for founders)
     const multiplier = config.population.reproductionThresholdMultiplier ?? 1.5;
     const candidates = agents.filter((a) => a.alive && a.capital >= multiplier * a.initialCapital);
     for (const parent of candidates) {
@@ -317,23 +323,26 @@ export async function runScenario(
 }
 
 /**
- * Runs the full T4 test suite across both Scenario A and Scenario B.
+ * Runs the full T4 test suite across Scenario A, Scenario B, and Scenario C.
  */
-export async function runT4(): Promise<T4DualReport> {
+export async function runT4(): Promise<T4TriReport> {
   const scenarioA = await runScenario('Scenario A (Martingale, drift = 0%)', T4_CONFIG_SCENARIO_A);
   const scenarioB = await runScenario('Scenario B (Negative Drift, -2%/month)', T4_CONFIG_SCENARIO_B);
+  const scenarioC = await runScenario('Scenario C (Positive Drift, +1%/month)', T4_CONFIG_SCENARIO_C);
 
-  const passed = scenarioA.metrics.simulatorPassed && scenarioB.metrics.simulatorPassed;
+  const passed = scenarioA.metrics.simulatorPassed && scenarioB.metrics.simulatorPassed && scenarioC.metrics.simulatorPassed;
 
-  const reportPath = await writeDualScenarioReport(
+  const reportPath = await writeTriScenarioReport(
     scenarioA,
     scenarioB,
+    scenarioC,
     'results/t4/report.md',
   );
 
   return {
     scenarioA,
     scenarioB,
+    scenarioC,
     passed,
     reportPath,
   };
