@@ -1,81 +1,95 @@
 /**
- * T4 — Economic Population: Correlated Factor Model & Fat-Tail Shocks
+ * T4 — Economic Population: Two-Regime Market Model with Persistence & Correlated Shocks
  *
- * Paper Reference: GLOFICA_Langton_Autonomon.md §7.1, Proposition 10, §14 (T4).
+ * Paper Reference: GLOFICA_Langton_Autonomon.md §7.1, §14 (T2, T3, T4).
  *
- * Market Factor Model:
- *   r_{m, t} = mu_m * dt + sigma_m * sqrt(dt) * Z_{m, t} + J_t
+ * Two-Regime Persistence Kernel:
+ *   - Latent State: BULL or BEAR
+ *   - Persistence: P(BULL -> BULL) = q, P(BEAR -> BEAR) = q (default q = 0.80)
+ *   - Transition: P(BULL -> BEAR) = 1 - q, P(BEAR -> BULL) = 1 - q (default 0.20)
  *
- * For each agent i:
- *   r_{i, t} = mu_m * dt + sqrt(rho) * sigma_m * sqrt(dt) * Z_{m, t} + sqrt(1 - rho) * sigma_i * sqrt(dt) * Z_{i, t} + J_t
+ * Within each regime, asset returns follow an equicorrelated factor model:
+ *   r_{m, t} = mu_regime * dt + sigma_m * sqrt(dt) * Z_{m, t} + J_t
+ *   r_{i, t} = mu_regime * dt + sqrt(rho) * sigma_m * sqrt(dt) * Z_{m, t} + sqrt(1 - rho) * sigma_i * sqrt(dt) * Z_{i, t} + J_t
  *
  * Where:
- *   - rho in [0, 1) is the pairwise return correlation (Proposition 10 default: 0.50)
- *   - Z_{m, t}, Z_{i, t} ~ N(0, 1) (drawn via seeded Box-Muller transform)
+ *   - mu_regime = driftBull (in BULL) or driftBear (in BEAR)
+ *   - rho in [0, 1) is the pairwise return correlation (default 0.50 per Proposition 10)
  *   - J_t is a systemic macro tail jump shock (fat tails)
  *
  * Scenarios:
- *   - Scenario A: Pure Martingale (marketDrift = 0.0)
- *   - Scenario B: Negative Drift (marketDrift = -0.24, i.e. -2% monthly / -24% annualized)
+ *   - Scenario A: Symmetric Regimes (driftBull = +0.08/mo, driftBear = -0.08/mo)
+ *   - Scenario B: Bear Dominant (driftBull = +0.04/mo, driftBear = -0.14/mo)
+ *   - Scenario C: Bull Dominant (driftBull = +0.14/mo, driftBear = -0.04/mo)
  */
 
 import { type RandomSource } from '../../src/rl/q-learning.js';
 
+export type MarketRegime = 'BULL' | 'BEAR';
+
 export interface ShockModelConfig {
   name?: string;
-  marketDrift: number;        // Annualized market drift mu_m (0 for martingale, -0.24 for -2%/mo)
-  marketVol: number;          // Annualized market volatility sigma_m (e.g. 0.30)
-  idiosyncraticVol: number;   // Annualized idiosyncratic volatility sigma_eps (e.g. 0.25)
-  correlationRho: number;     // Pairwise correlation rho in [0, 1) (Proposition 10)
+  regimePersistence: number;  // q = 0.80
+  driftBullMonthly: number;   // Monthly drift in BULL
+  driftBearMonthly: number;   // Monthly drift in BEAR
+  marketVol: number;          // Annualized market vol (0.30)
+  idiosyncraticVol: number;   // Annualized idiosyncratic vol (0.25)
+  correlationRho: number;     // Pairwise correlation (0.50 per Proposition 10)
   enableFatTails: boolean;
-  tailJumpProb: number;       // Probability of tail event per step (e.g. 0.02)
-  tailJumpMean: number;       // Mean impact of tail shock (e.g. -0.12)
-  tailJumpVol: number;        // Dispersion of tail shock (e.g. 0.04)
+  tailJumpProb: number;       // Probability of tail shock per day (0.02)
+  tailJumpMean: number;       // Mean impact of tail shock (-0.12)
+  tailJumpVol: number;        // Dispersion of tail shock (0.04)
 }
 
 /**
- * Scenario A: Pure Martingale (zero drift, baseline market dynamics)
+ * Scenario A: Symmetric Regimes (+0.08 monthly BULL / -0.08 monthly BEAR)
  */
 export const T4_SHOCK_SCENARIO_A: ShockModelConfig = {
-  name: 'Scenario A (Pure Martingale, drift = 0%)',
-  marketDrift: 0.0,           // 0% drift
-  marketVol: 0.30,            // 30% annualized volatility
-  idiosyncraticVol: 0.25,     // 25% annualized idiosyncratic vol
-  correlationRho: 0.50,       // rho = 0.50 per Proposition 10
-  enableFatTails: true,       // Fat tails enabled
-  tailJumpProb: 0.02,         // 2% daily probability of systemic stress event
-  tailJumpMean: -0.12,        // -12% sharp market-wide drawdown
-  tailJumpVol: 0.04,          // 4% tail shock dispersion
+  name: 'Scenario A (Symmetric Regimes, +8% BULL / -8% BEAR)',
+  regimePersistence: 0.80,
+  driftBullMonthly: 0.08,
+  driftBearMonthly: -0.08,
+  marketVol: 0.30,
+  idiosyncraticVol: 0.25,
+  correlationRho: 0.50,
+  enableFatTails: true,
+  tailJumpProb: 0.02,
+  tailJumpMean: -0.12,
+  tailJumpVol: 0.04,
 };
 
 /**
- * Scenario B: Negative Drift (-2% monthly bear market per Paper §14)
+ * Scenario B: Bear Dominant (+0.04 monthly BULL / -0.14 monthly BEAR)
  */
 export const T4_SHOCK_SCENARIO_B: ShockModelConfig = {
-  name: 'Scenario B (Negative Drift, -2%/month bear market)',
-  marketDrift: -0.24,         // -2% monthly = -24% annualized drift
-  marketVol: 0.30,            // 30% annualized volatility
-  idiosyncraticVol: 0.25,     // 25% annualized idiosyncratic vol
-  correlationRho: 0.50,       // rho = 0.50 per Proposition 10
-  enableFatTails: true,       // Fat tails enabled
-  tailJumpProb: 0.02,         // 2% daily probability
-  tailJumpMean: -0.12,        // -12% mean tail shock
-  tailJumpVol: 0.04,          // 4% tail shock dispersion
+  name: 'Scenario B (Bear Dominant, +4% BULL / -14% BEAR)',
+  regimePersistence: 0.80,
+  driftBullMonthly: 0.04,
+  driftBearMonthly: -0.14,
+  marketVol: 0.30,
+  idiosyncraticVol: 0.25,
+  correlationRho: 0.50,
+  enableFatTails: true,
+  tailJumpProb: 0.02,
+  tailJumpMean: -0.12,
+  tailJumpVol: 0.04,
 };
 
 /**
- * Scenario C: Positive Drift (+1% monthly bull market per Paper §14)
+ * Scenario C: Bull Dominant (+0.14 monthly BULL / -0.04 monthly BEAR)
  */
 export const T4_SHOCK_SCENARIO_C: ShockModelConfig = {
-  name: 'Scenario C (Positive Drift, +1%/month bull market)',
-  marketDrift: 0.12,          // +1% monthly = +12% annualized drift
-  marketVol: 0.30,            // 30% annualized volatility
-  idiosyncraticVol: 0.25,     // 25% annualized idiosyncratic vol
-  correlationRho: 0.50,       // rho = 0.50 per Proposition 10
-  enableFatTails: true,       // Fat tails enabled
-  tailJumpProb: 0.02,         // 2% daily probability
-  tailJumpMean: -0.12,        // -12% mean tail shock
-  tailJumpVol: 0.04,          // 4% tail shock dispersion
+  name: 'Scenario C (Bull Dominant, +14% BULL / -4% BEAR)',
+  regimePersistence: 0.80,
+  driftBullMonthly: 0.14,
+  driftBearMonthly: -0.04,
+  marketVol: 0.30,
+  idiosyncraticVol: 0.25,
+  correlationRho: 0.50,
+  enableFatTails: true,
+  tailJumpProb: 0.02,
+  tailJumpMean: -0.12,
+  tailJumpVol: 0.04,
 };
 
 export const T4_DEFAULT_SHOCK_CONFIG: ShockModelConfig = T4_SHOCK_SCENARIO_A;
@@ -90,28 +104,48 @@ export function standardNormal(rng: RandomSource): number {
   return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 }
 
+/**
+ * Samples the next regime according to persistence kernel P(s' | s).
+ */
+export function sampleNextRegime(
+  currentRegime: MarketRegime,
+  persistenceQ: number,
+  rng: RandomSource,
+): MarketRegime {
+  if (rng.next() < persistenceQ) {
+    return currentRegime;
+  }
+  return currentRegime === 'BULL' ? 'BEAR' : 'BULL';
+}
+
 export interface StepShockResult {
+  regime: MarketRegime;
   marketReturn: number;
   agentReturns: Record<string, number>;
   tailEventOccurred: boolean;
 }
 
 /**
- * Generates correlated asset returns for all living agents at a given time step.
+ * Generates correlated asset returns under the active market regime.
  */
 export function generateStepShocks(
   agentIds: string[],
   dt: number,
+  currentRegime: MarketRegime,
   rng: RandomSource,
   config: ShockModelConfig = T4_DEFAULT_SHOCK_CONFIG,
 ): StepShockResult {
   const sqrtDt = Math.sqrt(dt);
 
+  // Convert monthly drift to step drift: monthly * (12 * dt)
+  const monthlyDrift = currentRegime === 'BULL' ? config.driftBullMonthly : config.driftBearMonthly;
+  const stepDrift = monthlyDrift * 12 * dt;
+
   // 1. Common market diffusion factor
   const zMarket = standardNormal(rng);
   const commonFactor = config.marketVol * sqrtDt * zMarket;
 
-  // 2. Check for macro tail shock (systemic shock to all correlated agents)
+  // 2. Check for macro tail shock (systemic shock across all correlated agents)
   let macroTailShock = 0.0;
   let tailEventOccurred = false;
   if (config.enableFatTails && rng.next() < config.tailJumpProb) {
@@ -119,7 +153,7 @@ export function generateStepShocks(
     macroTailShock = config.tailJumpMean + config.tailJumpVol * standardNormal(rng);
   }
 
-  const marketReturn = config.marketDrift * dt + commonFactor + macroTailShock;
+  const marketReturn = stepDrift + commonFactor + macroTailShock;
 
   // 3. Asset return for each agent
   const sqrtRho = Math.sqrt(config.correlationRho);
@@ -130,11 +164,12 @@ export function generateStepShocks(
     const zIdio = standardNormal(rng);
     const idioComponent = config.idiosyncraticVol * sqrtDt * zIdio;
 
-    const returnI = config.marketDrift * dt + sqrtRho * commonFactor + sqrtOneMinusRho * idioComponent + macroTailShock;
+    const returnI = stepDrift + sqrtRho * commonFactor + sqrtOneMinusRho * idioComponent + macroTailShock;
     agentReturns[id] = returnI;
   }
 
   return {
+    regime: currentRegime,
     marketReturn,
     agentReturns,
     tailEventOccurred,

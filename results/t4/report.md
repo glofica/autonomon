@@ -1,6 +1,6 @@
 # T4 Economic Population Simulator Report (Phase 1 Calibrated - 3 Scenarios)
 
-**Date:** 2026-10-05T21:29:06.597Z
+**Date:** 2026-10-05T21:36:40.807Z
 
 **Specification:** Paper §14 (Economic Population), §7 (Reproduction & Proposition 6), §12 (Self-Funding & Fixed Cost Drag)
 
@@ -34,12 +34,12 @@ Three distinct macro regime scenarios are evaluated:
 |---|---|---|---|
 | **Founder Survival Rate** | **100.00%** [100.00%, 100.00%] | **100.00%** [100.00%, 100.00%] | **100.00%** [100.00%, 100.00%] |
 | **Overall Ruin Probability** | **0.00%** [0.00%, 0.00%] | **0.00%** [0.00%, 0.00%] | **0.00%** [0.00%, 0.00%] |
-| **Final Living Population** | **10.00** [10.00, 10.00] | **10.00** [10.00, 10.00] | **10.00** [10.00, 10.00] |
-| **Total Children Born** | **0.00** [0.00, 0.00] | **0.00** [0.00, 0.00] | **0.00** [0.00, 0.00] |
-| **Reproduction Frequency** | **0.00** /fd/yr | **0.00** /fd/yr | **0.00** /fd/yr |
-| **Peak Capital Observed (Mean)** | **$2126.34** | **$2090.32** | **$2135.44** |
-| **Max Peak Capital (Across Seeds)** | **$2619.92** | **$2290.21** | **$2568.96** |
-| **Annual Growth Rate** | **0.00%** | **0.00%** | **0.00%** |
+| **Final Living Population** | **10.00** [10.00, 10.00] | **10.00** [10.00, 10.00] | **10.37** [10.07, 10.77] |
+| **Total Children Born** | **0.00** [0.00, 0.00] | **0.00** [0.00, 0.00] | **0.37** [0.07, 0.77] |
+| **Reproduction Frequency** | **0.00** /fd/yr | **0.00** /fd/yr | **0.02** /fd/yr |
+| **Peak Capital Observed (Mean)** | **$2156.29** | **$2076.76** | **$2505.31** |
+| **Max Peak Capital (Across Seeds)** | **$2437.74** | **$2289.65** | **$3049.81** |
+| **Annual Growth Rate** | **0.00%** | **0.00%** | **1.71%** |
 
 ## Aggregate Survival Curves Across 2-Year Horizon
 
@@ -47,17 +47,17 @@ Three distinct macro regime scenarios are evaluated:
 |---|---|---|---|---|---|---|---|
 | Month 0 | Day 0 | 100.00% | 10.00 | 100.00% | 10.00 | 100.00% | 10.00 |
 | Month 6 | Day 182 | 100.00% | 10.00 | 100.00% | 10.00 | 100.00% | 10.00 |
-| Month 12 | Day 365 | 100.00% | 10.00 | 100.00% | 10.00 | 100.00% | 10.00 |
-| Month 18 | Day 547 | 100.00% | 10.00 | 100.00% | 10.00 | 100.00% | 10.00 |
-| Month 24 | Day 730 | 100.00% | 10.00 | 100.00% | 10.00 | 100.00% | 10.00 |
+| Month 12 | Day 365 | 100.00% | 10.00 | 100.00% | 10.00 | 100.00% | 10.13 |
+| Month 18 | Day 547 | 100.00% | 10.00 | 100.00% | 10.00 | 100.00% | 10.23 |
+| Month 24 | Day 730 | 100.00% | 10.00 | 100.00% | 10.00 | 100.00% | 10.37 |
 
 ## Calibration Targets vs Observed Empirical Outcomes
 
 | Scenario | Expected Survival Target | Observed Founder Survival | Observed Peak Capital | Status |
 |---|---|---|---|---|
-| Scenario A (Martingale) | 40% - 60% | 100.00% | $2126.34 | Empirical Result |
-| Scenario B (Bear -2%/mo) | 10% - 25% | 100.00% | $2090.32 | Empirical Result |
-| Scenario C (Bull +1%/mo) | 60% - 80% (+ repro > 0) | 100.00% | $2135.44 | Empirical Result |
+| Scenario A (Martingale) | 40% - 60% | 100.00% | $2156.29 | Empirical Result |
+| Scenario B (Bear -2%/mo) | 10% - 25% | 100.00% | $2076.76 | Empirical Result |
+| Scenario C (Bull +1%/mo) | 60% - 80% (+ repro > 0) | 100.00% | $2505.31 | Empirical Result |
 
 ## Acceptance Criteria (Phase 1 Calibrated - 3 Scenarios)
 

@@ -1,12 +1,12 @@
 /**
- * T4 — Economic Population: Simulation Runner (Phase 1 Skeleton - Three Scenarios)
+ * T4 — Economic Population: Simulation Runner (Two-Regime Persistent Market)
  *
- * Paper Reference: GLOFICA_Langton_Autonomon.md §7, §12, §14 (T4).
+ * Paper Reference: GLOFICA_Langton_Autonomon.md §7, §12, §14 (T2, T3, T4).
  *
  * Scenarios:
- *   - Scenario A: Pure Martingale (drift = 0%)
- *   - Scenario B: Negative Drift (-2%/month bear market)
- *   - Scenario C: Positive Drift (+1%/month bull market)
+ *   - Scenario A: Symmetric Regimes (+0.08 BULL / -0.08 BEAR)
+ *   - Scenario B: Bear Dominant (+0.04 BULL / -0.14 BEAR)
+ *   - Scenario C: Bull Dominant (+0.14 BULL / -0.04 BEAR)
  */
 
 import {
@@ -23,10 +23,12 @@ import {
 } from './costs.js';
 import {
   type ShockModelConfig,
+  type MarketRegime,
   T4_SHOCK_SCENARIO_A,
   T4_SHOCK_SCENARIO_B,
   T4_SHOCK_SCENARIO_C,
   generateStepShocks,
+  sampleNextRegime,
 } from './shocks.js';
 import { SeededPRNG } from '../t2/runner.js';
 import { computeT4Metrics, type T4Metrics, type SeedPopulationResult } from './metrics.js';
@@ -145,7 +147,7 @@ export async function runOnePopulationSeed(
   const livingCounts: number[] = new Array(totalSteps + 1);
   livingCounts[0] = agents.filter((a) => a.alive).length;
 
-  let observedMarketSignal: 'BULL' | 'BEAR' = 'BULL';
+  let currentRegime: MarketRegime = rng.next() >= 0.5 ? 'BULL' : 'BEAR';
 
   for (let t = 0; t < totalSteps; t++) {
     const livingAgents = agents.filter((a) => a.alive);
@@ -158,7 +160,7 @@ export async function runOnePopulationSeed(
 
     const livingIds = livingAgents.map((a) => a.id);
 
-    // 1. Each agent acts based on currently observed market signal and its inventory
+    // 1. Each agent acts based on currently observed market regime and its inventory state
     const decisions: Array<{
       agent: AgentRecord;
       prevCapital: number;
@@ -170,7 +172,7 @@ export async function runOnePopulationSeed(
 
     for (const agent of livingAgents) {
       const prevCapital = agent.capital;
-      const stateKey = `${observedMarketSignal}_${agent.inventoryState}`;
+      const stateKey = `${currentRegime}_${agent.inventoryState}`;
       const action = agent.ql.selectAction(stateKey);
       const nextInv = getNextInventory(agent.inventoryState, action);
       const isTrade = action === 'ACQUIRE_SPOT' || action === 'DISPOSE_SPOT' || action === 'REDUCE_INVENTORY';
@@ -187,11 +189,13 @@ export async function runOnePopulationSeed(
       });
     }
 
-    // 2. Realize correlated asset price shocks for step t
-    const shockResult = generateStepShocks(livingIds, dt, rng, config.shocks);
-    const realizedMarketSignal: 'BULL' | 'BEAR' = shockResult.marketReturn >= 0 ? 'BULL' : 'BEAR';
+    // 2. Realize asset returns under current regime
+    const shockResult = generateStepShocks(livingIds, dt, currentRegime, rng, config.shocks);
 
-    // 3. Resolve execution, PnL, operating costs, and Q-learning updates
+    // 3. Evolve regime for the next period according to persistence kernel
+    const nextRegime = sampleNextRegime(currentRegime, config.shocks.regimePersistence, rng);
+
+    // 4. Resolve PnL, deduct operating costs, and update Q-learning
     for (const d of decisions) {
       const { agent, prevCapital, stateKey, action, nextInv, tradeFee } = d;
 
@@ -201,7 +205,7 @@ export async function runOnePopulationSeed(
       agent.capital += tradingPnl;
       agent.inventoryState = nextInv;
 
-      // Deduct operating costs (hosting, inference, gas)
+      // Deduct operating costs ($22/mo proportional to dt)
       const costResult = deductOperatingCosts(agent, dt, t, config.costs);
 
       if (!costResult.survived) {
@@ -216,8 +220,8 @@ export async function runOnePopulationSeed(
           agent.peakCapital = agent.capital;
         }
 
-        // Q-learning update
-        const nextStateKey = `${realizedMarketSignal}_${agent.inventoryState}`;
+        // Q-learning update: nextStateKey uses nextRegime and nextInv
+        const nextStateKey = `${nextRegime}_${agent.inventoryState}`;
         const rawReward = prevCapital > 0 && agent.capital > 0
           ? Math.log(agent.capital / prevCapital)
           : 0;
@@ -226,9 +230,9 @@ export async function runOnePopulationSeed(
       }
     }
 
-    observedMarketSignal = realizedMarketSignal;
+    currentRegime = nextRegime;
 
-    // 4. Reproduction check: capital >= 1.5 * initialCapital ($3,000 for founders)
+    // 5. Reproduction check: capital >= 1.5 * initialCapital ($3,000 for founders)
     const multiplier = config.population.reproductionThresholdMultiplier ?? 1.5;
     const candidates = agents.filter((a) => a.alive && a.capital >= multiplier * a.initialCapital);
     for (const parent of candidates) {
@@ -326,9 +330,9 @@ export async function runScenario(
  * Runs the full T4 test suite across Scenario A, Scenario B, and Scenario C.
  */
 export async function runT4(): Promise<T4TriReport> {
-  const scenarioA = await runScenario('Scenario A (Martingale, drift = 0%)', T4_CONFIG_SCENARIO_A);
-  const scenarioB = await runScenario('Scenario B (Negative Drift, -2%/month)', T4_CONFIG_SCENARIO_B);
-  const scenarioC = await runScenario('Scenario C (Positive Drift, +1%/month)', T4_CONFIG_SCENARIO_C);
+  const scenarioA = await runScenario('Scenario A (Symmetric Regimes, +8% BULL / -8% BEAR)', T4_CONFIG_SCENARIO_A);
+  const scenarioB = await runScenario('Scenario B (Bear Dominant, +4% BULL / -14% BEAR)', T4_CONFIG_SCENARIO_B);
+  const scenarioC = await runScenario('Scenario C (Bull Dominant, +14% BULL / -4% BEAR)', T4_CONFIG_SCENARIO_C);
 
   const passed = scenarioA.metrics.simulatorPassed && scenarioB.metrics.simulatorPassed && scenarioC.metrics.simulatorPassed;
 
