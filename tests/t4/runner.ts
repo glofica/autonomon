@@ -12,6 +12,8 @@
 import {
   type AgentRecord,
   type PopulationConfig,
+  T4_STRESS_POPULATION_CONFIG,
+  T4_PRODUCT_POPULATION_CONFIG,
   T4_DEFAULT_POPULATION_CONFIG,
   createFounder,
   reproduceAgent,
@@ -32,7 +34,7 @@ import {
 } from './shocks.js';
 import { SeededPRNG } from '../t2/runner.js';
 import { computeT4Metrics, type T4Metrics, type SeedPopulationResult } from './metrics.js';
-import { writeTriScenarioReport } from './report.js';
+import { writeDualSetupReport } from './report.js';
 
 export interface PopulationEvent {
   step: number;
@@ -48,28 +50,55 @@ export interface T4Config {
   seedsCount: number;
 }
 
-export const T4_CONFIG_SCENARIO_A: T4Config = {
-  population: T4_DEFAULT_POPULATION_CONFIG,
+// Stress Setup ($800 capital, $40/month, 24 months)
+export const T4_STRESS_CONFIG_A: T4Config = {
+  population: T4_STRESS_POPULATION_CONFIG,
   costs: T4_DEFAULT_COST_CONFIG,
   shocks: T4_SHOCK_SCENARIO_A,
   seedsCount: 30,
 };
 
-export const T4_CONFIG_SCENARIO_B: T4Config = {
-  population: T4_DEFAULT_POPULATION_CONFIG,
+export const T4_STRESS_CONFIG_B: T4Config = {
+  population: T4_STRESS_POPULATION_CONFIG,
   costs: T4_DEFAULT_COST_CONFIG,
   shocks: T4_SHOCK_SCENARIO_B,
   seedsCount: 30,
 };
 
-export const T4_CONFIG_SCENARIO_C: T4Config = {
-  population: T4_DEFAULT_POPULATION_CONFIG,
+export const T4_STRESS_CONFIG_C: T4Config = {
+  population: T4_STRESS_POPULATION_CONFIG,
   costs: T4_DEFAULT_COST_CONFIG,
   shocks: T4_SHOCK_SCENARIO_C,
   seedsCount: 30,
 };
 
-export const T4_DEFAULT_CONFIG: T4Config = T4_CONFIG_SCENARIO_A;
+// Product Setup ($5,000 capital, $40/month, 24 months)
+export const T4_PRODUCT_CONFIG_A: T4Config = {
+  population: T4_PRODUCT_POPULATION_CONFIG,
+  costs: T4_DEFAULT_COST_CONFIG,
+  shocks: T4_SHOCK_SCENARIO_A,
+  seedsCount: 30,
+};
+
+export const T4_PRODUCT_CONFIG_B: T4Config = {
+  population: T4_PRODUCT_POPULATION_CONFIG,
+  costs: T4_DEFAULT_COST_CONFIG,
+  shocks: T4_SHOCK_SCENARIO_B,
+  seedsCount: 30,
+};
+
+export const T4_PRODUCT_CONFIG_C: T4Config = {
+  population: T4_PRODUCT_POPULATION_CONFIG,
+  costs: T4_DEFAULT_COST_CONFIG,
+  shocks: T4_SHOCK_SCENARIO_C,
+  seedsCount: 30,
+};
+
+// Aliases for backwards compatibility
+export const T4_CONFIG_SCENARIO_A = T4_STRESS_CONFIG_A;
+export const T4_CONFIG_SCENARIO_B = T4_STRESS_CONFIG_B;
+export const T4_CONFIG_SCENARIO_C = T4_STRESS_CONFIG_C;
+export const T4_DEFAULT_CONFIG = T4_STRESS_CONFIG_A;
 
 export interface T4ScenarioResult {
   scenarioName: string;
@@ -78,10 +107,16 @@ export interface T4ScenarioResult {
   metrics: T4Metrics;
 }
 
-export interface T4TriReport {
+export interface T4SetupResult {
+  setupName: string;
   scenarioA: T4ScenarioResult;
   scenarioB: T4ScenarioResult;
   scenarioC: T4ScenarioResult;
+}
+
+export interface T4DualSetupReport {
+  stressSetup: T4SetupResult;
+  productSetup: T4SetupResult;
   passed: boolean;
   reportPath: string;
 }
@@ -338,26 +373,47 @@ export async function runScenario(
 }
 
 /**
- * Runs the full T4 test suite across Scenario A, Scenario B, and Scenario C.
+ * Runs the full T4 test suite across both Stress Setup ($800) and Product Setup ($5,000)
+ * over all 3 market scenarios (A, B, C) with 30 seeds each (180 total population runs).
  */
-export async function runT4(): Promise<T4TriReport> {
-  const scenarioA = await runScenario('Scenario A (Symmetric Regimes, +8% BULL / -8% BEAR)', T4_CONFIG_SCENARIO_A);
-  const scenarioB = await runScenario('Scenario B (Bear Dominant, +4% BULL / -14% BEAR)', T4_CONFIG_SCENARIO_B);
-  const scenarioC = await runScenario('Scenario C (Bull Dominant, +14% BULL / -4% BEAR)', T4_CONFIG_SCENARIO_C);
+export async function runT4(): Promise<T4DualSetupReport> {
+  const stressA = await runScenario('Scenario A (Symmetric)', T4_STRESS_CONFIG_A);
+  const stressB = await runScenario('Scenario B (Bear Dominant)', T4_STRESS_CONFIG_B);
+  const stressC = await runScenario('Scenario C (Bull Dominant)', T4_STRESS_CONFIG_C);
+  const stressSetup: T4SetupResult = {
+    setupName: 'Stress Setup ($800 capital, $40/month)',
+    scenarioA: stressA,
+    scenarioB: stressB,
+    scenarioC: stressC,
+  };
 
-  const passed = scenarioA.metrics.simulatorPassed && scenarioB.metrics.simulatorPassed && scenarioC.metrics.simulatorPassed;
+  const prodA = await runScenario('Scenario A (Symmetric)', T4_PRODUCT_CONFIG_A);
+  const prodB = await runScenario('Scenario B (Bear Dominant)', T4_PRODUCT_CONFIG_B);
+  const prodC = await runScenario('Scenario C (Bull Dominant)', T4_PRODUCT_CONFIG_C);
+  const productSetup: T4SetupResult = {
+    setupName: 'Product Setup ($5,000 capital, $40/month)',
+    scenarioA: prodA,
+    scenarioB: prodB,
+    scenarioC: prodC,
+  };
 
-  const reportPath = await writeTriScenarioReport(
-    scenarioA,
-    scenarioB,
-    scenarioC,
+  const passed =
+    stressA.metrics.simulatorPassed &&
+    stressB.metrics.simulatorPassed &&
+    stressC.metrics.simulatorPassed &&
+    prodA.metrics.simulatorPassed &&
+    prodB.metrics.simulatorPassed &&
+    prodC.metrics.simulatorPassed;
+
+  const reportPath = await writeDualSetupReport(
+    stressSetup,
+    productSetup,
     'results/t4/report.md',
   );
 
   return {
-    scenarioA,
-    scenarioB,
-    scenarioC,
+    stressSetup,
+    productSetup,
     passed,
     reportPath,
   };

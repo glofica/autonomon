@@ -41,15 +41,27 @@ export interface PopulationConfig {
   seed: number;
 }
 
-export const T4_DEFAULT_POPULATION_CONFIG: PopulationConfig = {
+export const T4_STRESS_POPULATION_CONFIG: PopulationConfig = {
   founderCount: 10,
-  initialCapitalPerFounder: 800, // $800 USD baseline capital (20-month runway at $40/mo)
-  reproductionThresholdMultiplier: 1.5, // Phase 1: 1.5x initial capital threshold ($1,200)
-  horizonYears: 2,               // 2-year simulation horizon
-  stepsPerYear: 365,             // Daily decision intervals (dt = 1/365 year)
+  initialCapitalPerFounder: 800, // $800 USD Stress Setup (20-month passive runway at $40/mo)
+  reproductionThresholdMultiplier: 1.5, // 1.5x initial capital threshold ($1,200)
+  horizonYears: 2,
+  stepsPerYear: 365,
   dt: 1 / 365,
   seed: 42,
 };
+
+export const T4_PRODUCT_POPULATION_CONFIG: PopulationConfig = {
+  founderCount: 10,
+  initialCapitalPerFounder: 5000, // $5,000 USD Product Setup (125-month passive runway at $40/mo)
+  reproductionThresholdMultiplier: 1.5, // 1.5x initial capital threshold ($7,500)
+  horizonYears: 2,
+  stepsPerYear: 365,
+  dt: 1 / 365,
+  seed: 42,
+};
+
+export const T4_DEFAULT_POPULATION_CONFIG: PopulationConfig = T4_STRESS_POPULATION_CONFIG;
 
 /**
  * Creates a founder agent (Generation 0).

@@ -119,4 +119,19 @@ describe('T4 — Economic Population Simulator (Two-Regime Persistent Market)', 
     expect(res.ruinProbability).toBeLessThanOrEqual(1);
     expect(res.maxCapital).toBeGreaterThan(0);
   });
+
+  it('defines distinct Stress ($800) and Product ($5,000) capital setups', () => {
+    expect(T4_CONFIG_SCENARIO_A.population.initialCapitalPerFounder).toBe(800);
+    expect(T4_CONFIG_SCENARIO_A.costs.monthlyHostingUsd).toBe(25);
+    expect(T4_CONFIG_SCENARIO_A.costs.monthlyInferenceUsd).toBe(10);
+    expect(T4_CONFIG_SCENARIO_A.costs.monthlyGasUsd).toBe(5);
+    const totalMonthlyCost =
+      T4_CONFIG_SCENARIO_A.costs.monthlyHostingUsd +
+      T4_CONFIG_SCENARIO_A.costs.monthlyInferenceUsd +
+      T4_CONFIG_SCENARIO_A.costs.monthlyGasUsd;
+    expect(totalMonthlyCost).toBe(40);
+    // Passive runway at $40/mo: $800 / $40 = 20 months
+    const stressRunwayMonths = T4_CONFIG_SCENARIO_A.population.initialCapitalPerFounder / totalMonthlyCost;
+    expect(stressRunwayMonths).toBe(20);
+  });
 });
