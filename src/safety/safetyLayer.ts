@@ -14,7 +14,7 @@
  */
 
 import { ActionLabel, ACTION_LABELS } from '../rl/actions.js';
-import { LangtonGenome, NumericGenome } from '../genome/types.js';
+import { LangtonGenome, NumericGenome, DEFAULT_GENOME } from '../genome/types.js';
 
 export interface SafetyLayerConfig {
     /** Maximum allowed slippage (e.g. 0.01 for 1%) */
@@ -242,3 +242,44 @@ export class SafetyLayer {
         };
     }
 }
+
+/**
+ * Compute the safe admissible action set A_safe(z_t) ⊆ A per Paper §4 and §6.
+ *
+ * Enforces:
+ * - Trailing 24h drawdown breaker lockout (§6.2)
+ * - Gas reserve invariant B - L - C >= g_gas (§6)
+ * - Concentration cap E_i / V <= g_omega (§6)
+ * - Minimum operational runway rho_t >= 1.0 (§3.6, §6)
+ * - Oracle quote freshness (§6.2)
+ *
+ * @param state Financial state of the agent (e.g. balance, inventory, nav, exposureRatio)
+ * @param snapshot Telemetry snapshot (drawdown, gas reserve, runway, oracle freshness)
+ * @param genome Optional genome overriding g_gas, g_omega (defaults to DEFAULT_GENOME)
+ * @param safetyLayer Optional existing SafetyLayer instance to maintain circuit breaker state
+ */
+export function computeAdmissibleActions(
+    state: { balance?: number; inventory?: number; nav?: number; exposureRatio?: number },
+    snapshot: ExecutionSnapshot,
+    genome: NumericGenome | LangtonGenome = DEFAULT_GENOME,
+    safetyLayer?: SafetyLayer,
+): ActionLabel[] {
+    const sl = safetyLayer ?? new SafetyLayer();
+    const result = sl.evaluate(snapshot, genome);
+    let admissible = [...result.admissibleActions];
+
+    // Enforce concentration cap: if exposure already >= g_omega, prevent new risk-increasing actions
+    const g_omega = genome.g_omega;
+    const currentExposureRatio = state.exposureRatio ?? (
+        snapshot.navUsd > 0 && state.inventory && snapshot.instrumentExposuresUsd
+            ? (state.inventory * (Object.values(snapshot.instrumentExposuresUsd)[0] ?? 0)) / snapshot.navUsd
+            : 0
+    );
+
+    if (currentExposureRatio >= g_omega) {
+        admissible = admissible.filter(a => a !== 'ACQUIRE_SPOT' && a !== 'PROVIDE_LIQUIDITY');
+    }
+
+    return admissible;
+}
+

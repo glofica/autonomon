@@ -54,6 +54,7 @@ export { prepareSpawn, calculateChildFunding, type SpawnConfig, type SpawnResult
 // Safety Layer (Paper §6)
 export {
     SafetyLayer,
+    computeAdmissibleActions,
     type SafetyLayerConfig,
     type ExecutionSnapshot,
     type ProposedTransaction,
