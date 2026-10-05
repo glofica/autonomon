@@ -19,6 +19,7 @@ export interface SeedPopulationResult {
   founderRuinProbability: number;
   reproductionFrequency: number;
   populationGrowthRate: number;
+  maxCapital: number;
   livingCounts: number[];
   founderSurvivalCurve: number[];
   eventsCount: number;
@@ -47,6 +48,7 @@ export interface T4Metrics {
   childrenBorn: MetricSummary;
   reproductionFrequency: MetricSummary;
   populationGrowthRate: MetricSummary;
+  peakCapital: MetricSummary;
   survivalCheckpoints: SurvivalCheckpoint[];
   simulatorPassed: boolean;
 }
@@ -118,6 +120,7 @@ export function computeT4Metrics(results: SeedPopulationResult[]): T4Metrics {
   const childrenBornSummary = summarizeMetric(results.map((r) => r.childrenBorn));
   const reproFreqSummary = summarizeMetric(results.map((r) => r.reproductionFrequency));
   const growthRateSummary = summarizeMetric(results.map((r) => r.populationGrowthRate));
+  const peakCapitalSummary = summarizeMetric(results.map((r) => r.maxCapital));
 
   // Compute survival checkpoints (Months 6, 12, 18, 24)
   const checkpoints: { month: number; day: number }[] = [
@@ -156,6 +159,7 @@ export function computeT4Metrics(results: SeedPopulationResult[]): T4Metrics {
     childrenBorn: childrenBornSummary,
     reproductionFrequency: reproFreqSummary,
     populationGrowthRate: growthRateSummary,
+    peakCapital: peakCapitalSummary,
     survivalCheckpoints,
     simulatorPassed,
   };

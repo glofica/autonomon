@@ -34,6 +34,7 @@ export interface AgentRecord {
 export interface PopulationConfig {
   founderCount: number;
   initialCapitalPerFounder: number;
+  reproductionThresholdMultiplier: number;
   horizonYears: number;
   stepsPerYear: number;
   dt: number;
@@ -42,7 +43,8 @@ export interface PopulationConfig {
 
 export const T4_DEFAULT_POPULATION_CONFIG: PopulationConfig = {
   founderCount: 10,
-  initialCapitalPerFounder: 1000, // $1,000 USD baseline trading capital
+  initialCapitalPerFounder: 500, // $500 USD baseline capital (stresses runway under $22/mo fixed cost)
+  reproductionThresholdMultiplier: 1.5, // Phase 1: 1.5x initial capital threshold
   horizonYears: 2,               // 2-year simulation horizon
   stepsPerYear: 365,             // Daily decision intervals (dt = 1/365 year)
   dt: 1 / 365,

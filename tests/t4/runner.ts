@@ -1,25 +1,24 @@
 /**
- * T4 — Economic Population: Simulation Runner (Phase 1 Skeleton)
+ * T4 — Economic Population: Simulation Runner (Phase 1 Skeleton - Calibrated)
  *
  * Paper Reference: GLOFICA_Langton_Autonomon.md §7, §12, §14 (T4).
  *
  * Temporal Execution Loop:
  *   For each time step t = 0 ... N - 1:
- *     1. Generate correlated asset returns (common factor + idiosyncratic + tail jumps)
- *     2. For each living agent:
- *        a. Observe state (market signal + inventory)
- *        b. Select action (HOLD, ACQUIRE_SPOT, DISPOSE_SPOT)
- *        c. Execute trade & compute PnL
- *        d. Deduct fixed operating costs (hosting, inference, gas)
- *        e. Evaluate solvency: if capital <= 0 -> death / financial termination
- *        f. Update tabular Q-learning
- *     3. Reproduction gate (Phase 1):
- *        If capital > 2.0 * initialCapital:
+ *     1. Agents observe state (past market signal + current inventory) and select actions.
+ *     2. Correlated asset returns are generated (common factor + idiosyncratic + fat-tail jumps).
+ *     3. For each living agent:
+ *        a. Transition inventory position
+ *        b. Realize trading PnL and trade fees
+ *        c. Deduct operating costs ($22/mo proportional to dt)
+ *        d. Evaluate solvency (capital <= 0 -> death / financial termination)
+ *        e. Update tabular Q-learning policy with log return reward
+ *     4. Reproduction gate (Phase 1):
+ *        If capital >= 1.5 * initialCapital:
  *          Spawn child with 50% surplus transfer (Proposition 6 capital conservation)
- *     4. Record population metrics & event logs (birth, death, reproduction)
+ *     5. Update living counts and event logs
  */
 
-import { type RandomSource } from '../../src/rl/q-learning.js';
 import {
   type AgentRecord,
   type PopulationConfig,
@@ -34,12 +33,13 @@ import {
 } from './costs.js';
 import {
   type ShockModelConfig,
-  T4_DEFAULT_SHOCK_CONFIG,
+  T4_SHOCK_SCENARIO_A,
+  T4_SHOCK_SCENARIO_B,
   generateStepShocks,
 } from './shocks.js';
 import { SeededPRNG } from '../t2/runner.js';
 import { computeT4Metrics, type T4Metrics, type SeedPopulationResult } from './metrics.js';
-import { writeReport } from './report.js';
+import { writeDualScenarioReport } from './report.js';
 
 export interface PopulationEvent {
   step: number;
@@ -55,16 +55,32 @@ export interface T4Config {
   seedsCount: number;
 }
 
-export const T4_DEFAULT_CONFIG: T4Config = {
+export const T4_CONFIG_SCENARIO_A: T4Config = {
   population: T4_DEFAULT_POPULATION_CONFIG,
   costs: T4_DEFAULT_COST_CONFIG,
-  shocks: T4_DEFAULT_SHOCK_CONFIG,
+  shocks: T4_SHOCK_SCENARIO_A,
   seedsCount: 30,
 };
 
-export interface T4Report {
+export const T4_CONFIG_SCENARIO_B: T4Config = {
+  population: T4_DEFAULT_POPULATION_CONFIG,
+  costs: T4_DEFAULT_COST_CONFIG,
+  shocks: T4_SHOCK_SCENARIO_B,
+  seedsCount: 30,
+};
+
+export const T4_DEFAULT_CONFIG: T4Config = T4_CONFIG_SCENARIO_A;
+
+export interface T4ScenarioResult {
+  scenarioName: string;
+  config: T4Config;
   seedResults: SeedPopulationResult[];
   metrics: T4Metrics;
+}
+
+export interface T4DualReport {
+  scenarioA: T4ScenarioResult;
+  scenarioB: T4ScenarioResult;
   passed: boolean;
   reportPath: string;
 }
@@ -94,7 +110,7 @@ function getExposure(inv: 'FLAT' | 'LIGHT' | 'HEAVY'): number {
  */
 export async function runOnePopulationSeed(
   seed: number,
-  config: T4Config = T4_DEFAULT_CONFIG,
+  config: T4Config = T4_CONFIG_SCENARIO_A,
 ): Promise<SeedPopulationResult> {
   const rng = new SeededPRNG(seed * 7919 + 104729);
   const totalSteps = config.population.horizonYears * config.population.stepsPerYear;
@@ -123,29 +139,56 @@ export async function runOnePopulationSeed(
   const livingCounts: number[] = new Array(totalSteps + 1);
   livingCounts[0] = agents.filter((a) => a.alive).length;
 
+  let observedMarketSignal: 'BULL' | 'BEAR' = 'BULL';
+
   for (let t = 0; t < totalSteps; t++) {
     const livingAgents = agents.filter((a) => a.alive);
+    if (livingAgents.length === 0) {
+      for (let rest = t; rest < totalSteps; rest++) {
+        livingCounts[rest + 1] = 0;
+      }
+      break;
+    }
+
     const livingIds = livingAgents.map((a) => a.id);
 
-    // 1. Generate correlated asset shocks
-    const shockResult = generateStepShocks(livingIds, dt, rng, config.shocks);
-    const marketSignal = shockResult.marketReturn >= 0 ? 'BULL' : 'BEAR';
+    // 1. Each agent acts based on currently observed market signal and its inventory
+    const decisions: Array<{
+      agent: AgentRecord;
+      prevCapital: number;
+      stateKey: string;
+      action: string;
+      nextInv: 'FLAT' | 'LIGHT' | 'HEAVY';
+      tradeFee: number;
+    }> = [];
 
-    // 2. Iterate each living agent
     for (const agent of livingAgents) {
       const prevCapital = agent.capital;
-      const stateKey = `${marketSignal}_${agent.inventoryState}`;
-
-      // Select action
+      const stateKey = `${observedMarketSignal}_${agent.inventoryState}`;
       const action = agent.ql.selectAction(stateKey);
-
-      // Execute inventory transition
       const nextInv = getNextInventory(agent.inventoryState, action);
       const isTrade = action === 'ACQUIRE_SPOT' || action === 'DISPOSE_SPOT';
       const tradeFee = isTrade ? agent.capital * (config.costs.tradeFeeBps / 10000) : 0.0;
       if (isTrade) agent.tradesCount++;
 
-      // Trading PnL
+      decisions.push({
+        agent,
+        prevCapital,
+        stateKey,
+        action,
+        nextInv,
+        tradeFee,
+      });
+    }
+
+    // 2. Realize correlated asset price shocks for step t
+    const shockResult = generateStepShocks(livingIds, dt, rng, config.shocks);
+    const realizedMarketSignal: 'BULL' | 'BEAR' = shockResult.marketReturn >= 0 ? 'BULL' : 'BEAR';
+
+    // 3. Resolve execution, PnL, operating costs, and Q-learning updates
+    for (const d of decisions) {
+      const { agent, prevCapital, stateKey, action, nextInv, tradeFee } = d;
+
       const assetRet = shockResult.agentReturns[agent.id] ?? shockResult.marketReturn;
       const exposure = getExposure(nextInv);
       const tradingPnl = exposure * assetRet * agent.capital - tradeFee;
@@ -168,8 +211,7 @@ export async function runOnePopulationSeed(
         }
 
         // Q-learning update
-        const nextMarketSignal = shockResult.marketReturn >= 0 ? 'BULL' : 'BEAR';
-        const nextStateKey = `${nextMarketSignal}_${agent.inventoryState}`;
+        const nextStateKey = `${realizedMarketSignal}_${agent.inventoryState}`;
         const rawReward = prevCapital > 0 && agent.capital > 0
           ? Math.log(agent.capital / prevCapital)
           : 0;
@@ -178,8 +220,11 @@ export async function runOnePopulationSeed(
       }
     }
 
-    // 3. Reproduction gate check (Phase 1 simplified: capital >= 2x initial)
-    const candidates = agents.filter((a) => a.alive && a.capital >= 2.0 * a.initialCapital);
+    observedMarketSignal = realizedMarketSignal;
+
+    // 4. Reproduction check: capital >= 1.5 * initialCapital
+    const multiplier = config.population.reproductionThresholdMultiplier ?? 1.5;
+    const candidates = agents.filter((a) => a.alive && a.capital >= multiplier * a.initialCapital);
     for (const parent of candidates) {
       const childId = `agent-${nextAgentId++}`;
       const { child, transferAmount } = reproduceAgent(parent, childId, t);
@@ -223,7 +268,9 @@ export async function runOnePopulationSeed(
   }
 
   // Population growth rate: (final / initial)^(1 / years) - 1
-  const growthRate = Math.pow(finalLiving / config.population.founderCount, 1 / config.population.horizonYears) - 1;
+  const growthRate = finalLiving > 0
+    ? Math.pow(finalLiving / config.population.founderCount, 1 / config.population.horizonYears) - 1
+    : -1.0;
 
   // Reproduction frequency: children born / (founderCount * years)
   const reproductionFrequency = totalChildren / (config.population.founderCount * config.population.horizonYears);
@@ -239,6 +286,7 @@ export async function runOnePopulationSeed(
     founderRuinProbability,
     reproductionFrequency,
     populationGrowthRate: growthRate,
+    maxCapital: Math.max(...agents.map((a) => a.peakCapital)),
     livingCounts,
     founderSurvivalCurve,
     eventsCount: events.length,
@@ -246,9 +294,12 @@ export async function runOnePopulationSeed(
 }
 
 /**
- * Runs the full T4 test suite across 30 independent population seeds.
+ * Runs a population scenario across 30 seeds.
  */
-export async function runT4(config: T4Config = T4_DEFAULT_CONFIG): Promise<T4Report> {
+export async function runScenario(
+  scenarioName: string,
+  config: T4Config,
+): Promise<T4ScenarioResult> {
   const seedResults: SeedPopulationResult[] = [];
 
   for (let seed = 1; seed <= config.seedsCount; seed++) {
@@ -257,18 +308,32 @@ export async function runT4(config: T4Config = T4_DEFAULT_CONFIG): Promise<T4Rep
   }
 
   const metrics = computeT4Metrics(seedResults);
-  const passed = metrics.simulatorPassed;
-
-  const reportPath = await writeReport(
-    metrics,
+  return {
+    scenarioName,
     config,
     seedResults,
+    metrics,
+  };
+}
+
+/**
+ * Runs the full T4 test suite across both Scenario A and Scenario B.
+ */
+export async function runT4(): Promise<T4DualReport> {
+  const scenarioA = await runScenario('Scenario A (Martingale, drift = 0%)', T4_CONFIG_SCENARIO_A);
+  const scenarioB = await runScenario('Scenario B (Negative Drift, -2%/month)', T4_CONFIG_SCENARIO_B);
+
+  const passed = scenarioA.metrics.simulatorPassed && scenarioB.metrics.simulatorPassed;
+
+  const reportPath = await writeDualScenarioReport(
+    scenarioA,
+    scenarioB,
     'results/t4/report.md',
   );
 
   return {
-    seedResults,
-    metrics,
+    scenarioA,
+    scenarioB,
     passed,
     reportPath,
   };
