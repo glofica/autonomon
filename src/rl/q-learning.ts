@@ -24,6 +24,8 @@ export interface QLearningConfig {
     epsilon: number;
     epsilonDecay: number;
     epsilonMin: number;
+    /** Optional per-(s,a) step-size schedule: alpha_n(n, stateKey, action) */
+    stepSizeFn?: (n: number, stateKey: string, action: string) => number;
 }
 
 export const DEFAULT_QL_CONFIG: QLearningConfig = {
@@ -42,6 +44,7 @@ export class QLearning {
     private actions: string[];
     private rng: RandomSource;
     private totalUpdates: number = 0;
+    private pairVisits: Map<string, Map<string, number>> = new Map();
 
     constructor(
         actions: string[],
@@ -82,7 +85,20 @@ export class QLearning {
     update(stateKey: string, action: string, reward: number, nextStateKey: string): void {
         const currentQ = this.getQ(stateKey, action);
         const maxNextQ = this.maxQ(nextStateKey);
-        const newQ = currentQ + this.config.alpha * (
+
+        let alpha = this.config.alpha;
+        if (this.config.stepSizeFn) {
+            let stateMap = this.pairVisits.get(stateKey);
+            if (!stateMap) {
+                stateMap = new Map();
+                this.pairVisits.set(stateKey, stateMap);
+            }
+            const n = (stateMap.get(action) ?? 0) + 1;
+            stateMap.set(action, n);
+            alpha = this.config.stepSizeFn(n, stateKey, action);
+        }
+
+        const newQ = currentQ + alpha * (
             reward + this.config.gamma * maxNextQ - currentQ
         );
         this.setQ(stateKey, action, newQ);
@@ -91,6 +107,10 @@ export class QLearning {
             this.config.epsilon * this.config.epsilonDecay,
         );
         this.totalUpdates++;
+    }
+
+    getPairVisits(stateKey: string, action: string): number {
+        return this.pairVisits.get(stateKey)?.get(action) ?? 0;
     }
 
     getQ(stateKey: string, action: string): number {
