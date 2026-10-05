@@ -53,6 +53,7 @@ export const T3_DEFAULT_CONFIG: T3Config = {
   totalTransitions: TOTAL_TRANSITIONS,
   tauChangeStep: TAU_CHANGE_STEP,
   regretTolerance: REGRET_TOLERANCE,
+  stabilityDuration: 100, // Sustained window requirement per Paper §14
   gamma: T2_GAMMA,
   constantAlpha: 0.10,
   diminishingPower: -0.7,
@@ -146,6 +147,7 @@ export async function runArmForSeed(
   let currentState = T2_STATES[Math.floor(rng.next() * numStates)];
 
   let recoveryStep: number | null = null;
+  let consecutiveSteps = 0;
   let cumulativePostRegret = 0.0;
   const postChangeHorizon = config.totalTransitions - config.tauChangeStep;
 
@@ -176,8 +178,16 @@ export async function runArmForSeed(
       const currentRegret = computeRegretAgainstGroundTruth(ql, viPhase2);
       cumulativePostRegret += currentRegret;
 
-      if (recoveryStep === null && currentRegret < config.regretTolerance) {
-        recoveryStep = t - config.tauChangeStep;
+      // Track sustained tolerance window per Paper §14
+      if (recoveryStep === null) {
+        if (currentRegret < config.regretTolerance) {
+          consecutiveSteps++;
+          if (consecutiveSteps === config.stabilityDuration) {
+            recoveryStep = (t - config.tauChangeStep) - config.stabilityDuration + 1;
+          }
+        } else {
+          consecutiveSteps = 0;
+        }
       }
     }
   }

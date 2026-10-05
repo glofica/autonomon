@@ -21,7 +21,12 @@ export type ArmType = 'constant' | 'diminishing' | 'frozen';
 export interface SeedArmResult {
   seed: number;
   arm: ArmType;
-  /** Steps post-tau until regret < tolerance. Null if censored. */
+  /**
+   * Adaptation delay: steps post-tau until regret remains below tolerance (< 0.05)
+   * for a sustained window of 100 consecutive steps, per Paper §14 ("remain within
+   * tolerance for a fixed duration"). Null if censored (the agent never sustains
+   * 100 consecutive steps below tolerance before the end of the simulation).
+   */
   adaptationDelay: number | null;
   /** Effective steps (capped at horizon if censored) for numerical summaries */
   effectiveSteps: number;

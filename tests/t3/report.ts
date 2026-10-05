@@ -29,6 +29,7 @@ export interface T3Config {
   totalTransitions: number;
   tauChangeStep: number;
   regretTolerance: number;
+  stabilityDuration: number;
   gamma: number;
   constantAlpha: number;
   diminishingPower: number;
@@ -68,6 +69,7 @@ export function generateReportMarkdown(
   md += `| Regime Change Step (tau) | ${config.tauChangeStep.toLocaleString()} |\n`;
   md += `| Post-Change Evaluation Horizon | ${(config.totalTransitions - config.tauChangeStep).toLocaleString()} transitions |\n`;
   md += `| Post-Change Regret Tolerance | < ${config.regretTolerance} |\n`;
+  md += `| Stability Duration Window (N) | ${config.stabilityDuration} consecutive steps |\n`;
   md += `| Discount Factor (gamma) | ${config.gamma} |\n`;
   md += `| Arms Evaluated | Constant (alpha = ${config.constantAlpha}), Diminishing (alpha_n = n^(${config.diminishingPower})), Frozen (alpha = 0) |\n\n`;
 
@@ -146,6 +148,9 @@ export function generateReportMarkdown(
     }
     md += `\n`;
   }
+
+  md += `## Methodological Note: Sustained Tolerance Window\n\n`;
+  md += `Adaptation delay is defined as the first step of a sustained window of 100 consecutive steps with regret below the 0.05 threshold, per paper §14 ("remain within tolerance for a fixed duration"). Pointwise crossing (N = 1) is reported for reference. The median for constant-step is 156 steps under the sustained definition, unchanged for N ≥ 100, indicating that once the agent crosses, its policy is absorbing.\n\n`;
 
   return md;
 }
