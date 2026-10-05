@@ -1,6 +1,6 @@
 # T1 No-Edge Null Test Suite Report
 
-**Date:** 2026-10-04T01:18:41.002Z
+**Date:** 2026-10-04T22:07:40.699Z
 
 **Variant:** T1c — two-phase (training then evaluation)
 
