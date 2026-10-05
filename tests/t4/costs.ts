@@ -24,9 +24,9 @@ export interface CostConfig {
 }
 
 export const T4_DEFAULT_COST_CONFIG: CostConfig = {
-  monthlyHostingUsd: 15.0,   // $15/mo per Paper §12.1
-  monthlyInferenceUsd: 5.0,  // $5/mo shared TimesFM service
-  monthlyGasUsd: 2.0,        // $2/mo operational reserve keepalive
+  monthlyHostingUsd: 25.0,   // $25/mo hosting
+  monthlyInferenceUsd: 10.0, // $10/mo prorated TimesFM + Qwen
+  monthlyGasUsd: 5.0,        // $5/mo GLOFICA gas
   tradeFeeBps: 10,           // 10 bps per trade execution
 };
 

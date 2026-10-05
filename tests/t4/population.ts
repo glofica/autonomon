@@ -43,8 +43,8 @@ export interface PopulationConfig {
 
 export const T4_DEFAULT_POPULATION_CONFIG: PopulationConfig = {
   founderCount: 10,
-  initialCapitalPerFounder: 2000, // $2,000 USD baseline capital per calibration request
-  reproductionThresholdMultiplier: 1.5, // Phase 1: 1.5x initial capital threshold ($3,000)
+  initialCapitalPerFounder: 800, // $800 USD baseline capital (20-month runway at $40/mo)
+  reproductionThresholdMultiplier: 1.5, // Phase 1: 1.5x initial capital threshold ($1,200)
   horizonYears: 2,               // 2-year simulation horizon
   stepsPerYear: 365,             // Daily decision intervals (dt = 1/365 year)
   dt: 1 / 365,

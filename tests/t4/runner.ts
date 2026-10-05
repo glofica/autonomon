@@ -148,6 +148,8 @@ export async function runOnePopulationSeed(
   livingCounts[0] = agents.filter((a) => a.alive).length;
 
   let currentRegime: MarketRegime = rng.next() >= 0.5 ? 'BULL' : 'BEAR';
+  let firstDeathStep: number | null = null;
+  let minCapitalAcrossRun = Infinity;
 
   for (let t = 0; t < totalSteps; t++) {
     const livingAgents = agents.filter((a) => a.alive);
@@ -205,10 +207,17 @@ export async function runOnePopulationSeed(
       agent.capital += tradingPnl;
       agent.inventoryState = nextInv;
 
-      // Deduct operating costs ($22/mo proportional to dt)
+      // Deduct operating costs ($40/mo proportional to dt)
       const costResult = deductOperatingCosts(agent, dt, t, config.costs);
 
+      if (agent.capital < minCapitalAcrossRun) {
+        minCapitalAcrossRun = agent.capital;
+      }
+
       if (!costResult.survived) {
+        if (firstDeathStep === null && agent.generation === 0) {
+          firstDeathStep = t;
+        }
         events.push({
           step: t,
           type: 'DEATH',
@@ -297,6 +306,8 @@ export async function runOnePopulationSeed(
     reproductionFrequency,
     populationGrowthRate: growthRate,
     maxCapital: Math.max(...agents.map((a) => a.peakCapital)),
+    minCapital: minCapitalAcrossRun === Infinity ? 0 : minCapitalAcrossRun,
+    firstDeathMonth: firstDeathStep !== null ? Math.round(((firstDeathStep / 365) * 12) * 10) / 10 : null,
     livingCounts,
     founderSurvivalCurve,
     eventsCount: events.length,

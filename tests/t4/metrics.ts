@@ -20,6 +20,8 @@ export interface SeedPopulationResult {
   reproductionFrequency: number;
   populationGrowthRate: number;
   maxCapital: number;
+  minCapital: number;
+  firstDeathMonth: number | null;
   livingCounts: number[];
   founderSurvivalCurve: number[];
   eventsCount: number;
@@ -49,6 +51,9 @@ export interface T4Metrics {
   reproductionFrequency: MetricSummary;
   populationGrowthRate: MetricSummary;
   peakCapital: MetricSummary;
+  minCapitalReached: MetricSummary;
+  earliestFirstDeathMonth: number | null;
+  meanFirstDeathMonth: number | null;
   survivalCheckpoints: SurvivalCheckpoint[];
   simulatorPassed: boolean;
 }
@@ -121,6 +126,14 @@ export function computeT4Metrics(results: SeedPopulationResult[]): T4Metrics {
   const reproFreqSummary = summarizeMetric(results.map((r) => r.reproductionFrequency));
   const growthRateSummary = summarizeMetric(results.map((r) => r.populationGrowthRate));
   const peakCapitalSummary = summarizeMetric(results.map((r) => r.maxCapital));
+  const minCapitalSummary = summarizeMetric(results.map((r) => r.minCapital));
+
+  const seedsWithDeath = results.filter((r) => r.firstDeathMonth !== null);
+  const firstDeathMonths = seedsWithDeath.map((r) => r.firstDeathMonth as number);
+  const earliestFirstDeathMonth = firstDeathMonths.length > 0 ? Math.min(...firstDeathMonths) : null;
+  const meanFirstDeathMonth = firstDeathMonths.length > 0
+    ? firstDeathMonths.reduce((acc, v) => acc + v, 0) / firstDeathMonths.length
+    : null;
 
   // Compute survival checkpoints (Months 6, 12, 18, 24)
   const checkpoints: { month: number; day: number }[] = [
@@ -160,6 +173,9 @@ export function computeT4Metrics(results: SeedPopulationResult[]): T4Metrics {
     reproductionFrequency: reproFreqSummary,
     populationGrowthRate: growthRateSummary,
     peakCapital: peakCapitalSummary,
+    minCapitalReached: minCapitalSummary,
+    earliestFirstDeathMonth,
+    meanFirstDeathMonth,
     survivalCheckpoints,
     simulatorPassed,
   };
