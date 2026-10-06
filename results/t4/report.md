@@ -1,6 +1,6 @@
 # T4 Economic Population Simulator Report
 
-**Date:** 2026-10-05T22:07:14.413Z
+**Date:** 2026-10-06T00:25:58.145Z
 
 **Specification:** Paper §14 (Economic Population), §7 (Reproduction & Proposition 6), §12 (Self-Funding & Fixed Cost Drag)
 
@@ -8,17 +8,17 @@
 
 | Scenario | Survival @12m | Survival @18m | Survival @24m | First Death | Peak Capital |
 |---|---|---|---|---|---|
-| A (Symmetric) | 95.33% | 2.67% | 0.00% | Month 9.7 | $860.56 |
-| B (Bear Dominant) | 88.67% | 0.67% | 0.00% | Month 8.7 | $842.53 |
-| C (Bull Dominant) | 97.67% | 34.33% | 2.67% | Month 10.8 | $1016.41 |
+| A (Symmetric) | 95.33% | 4.33% | 0.00% | Month 10.1 | $870.74 |
+| B (Bear Dominant) | 88.00% | 0.33% | 0.00% | Month 9.6 | $850.95 |
+| C (Bull Dominant) | 98.00% | 34.00% | 2.67% | Month 11.1 | $895.37 |
 
 ## Section 2 — Product Setup ($5,000 capital, $40/month)
 
 | Scenario | Survival @12m | Survival @18m | Survival @24m | First Death | Peak Capital | Children Born |
 |---|---|---|---|---|---|---|
-| A (Symmetric) | 100.00% | 100.00% | 100.00% | None | $7016.11 | 0.00 |
-| B (Bear Dominant) | 100.00% | 100.00% | 100.00% | None | $5898.24 | 0.00 |
-| C (Bull Dominant) | 100.00% | 100.00% | 100.00% | None | $7684.72 | 0.33 |
+| A (Symmetric) | 100.00% | 100.00% | 100.00% | None | $6303.29 | 0.00 |
+| B (Bear Dominant) | 100.00% | 100.00% | 100.00% | None | $6034.47 | 0.00 |
+| C (Bull Dominant) | 100.00% | 100.00% | 100.00% | None | $10138.79 | 0.23 |
 
 ## Notes
 
@@ -30,9 +30,13 @@
 - Product setup ($5,000): passive runway is 125 months. The agent has
   time to learn, operate, and reproduce. This is the recommended
   deployment configuration for new owners.
-- Reproduction requires the full gate per §7.1 (DSR ≥ 0.95, 365-day
-  window), which is not implemented in Phase 1. Phase 1 uses a
-  simplified 1.5x capital gate for demonstration.
+- Phase 2 Reproduction Gate: Implements the full statistical reproduction
+  gate per §7.1 (365-day history window, strictly positive excess returns,
+  one-sided 95% bootstrap CI > 0 with 1,000 resamples, Deflated Sharpe Ratio
+  (DSR) ≥ 0.95 under Bailey & López de Prado (2014) with Proposition 10
+  effective-trial correction, and 180-day cooldown). Mitosis only occurs
+  when statistically verified edge is confirmed, preventing spurious reproduction
+  under the null.
 
 ## Target Verification (Product Setup @24m)
 
@@ -40,4 +44,4 @@
 |---|---|---|---|
 | Scenario A (Symmetric) | 40% - 70% | 100.00% | Empirical Observation |
 | Scenario B (Bear Dominant) | 30% - 60% | 100.00% | Empirical Observation |
-| Scenario C (Bull Dominant) | 60% - 85% (+ repro > 0) | 100.00% (Children: 0.33) | Empirical Observation |
+| Scenario C (Bull Dominant) | 60% - 85% (+ repro > 0) | 100.00% (Children: 0.23) | Empirical Observation |

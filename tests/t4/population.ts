@@ -29,6 +29,8 @@ export interface AgentRecord {
   reproductionCount: number;
   ql: QLearning;
   inventoryState: 'FLAT' | 'LIGHT' | 'HEAVY';
+  dailyReturns: number[];
+  lastReproductionStep: number | null;
 }
 
 export interface PopulationConfig {
@@ -96,6 +98,8 @@ export function createFounder(
     reproductionCount: 0,
     ql,
     inventoryState: 'FLAT',
+    dailyReturns: [],
+    lastReproductionStep: null,
   };
 }
 
@@ -119,6 +123,7 @@ export function reproduceAgent(
   // Deduct transfer from parent capital (conservation of capital)
   parent.capital -= transfer;
   parent.reproductionCount++;
+  parent.lastReproductionStep = step;
 
   // Child inherits parent genome and starts with transfer capital
   const childQl = new QLearning(ACTION_IDS, {
@@ -149,6 +154,8 @@ export function reproduceAgent(
     reproductionCount: 0,
     ql: childQl,
     inventoryState: 'FLAT',
+    dailyReturns: [],
+    lastReproductionStep: null,
   };
 
   return { child, transferAmount: transfer };

@@ -35,6 +35,10 @@ import {
 import { SeededPRNG } from '../t2/runner.js';
 import { computeT4Metrics, type T4Metrics, type SeedPopulationResult } from './metrics.js';
 import { writeDualSetupReport } from './report.js';
+import {
+  evaluateReproductionGate,
+  DEFAULT_REPRODUCTION_GATE_CONFIG,
+} from './reproduction-gate.js';
 
 export interface PopulationEvent {
   step: number;
@@ -245,6 +249,10 @@ export async function runOnePopulationSeed(
       // Deduct operating costs ($40/mo proportional to dt)
       const costResult = deductOperatingCosts(agent, dt, t, config.costs);
 
+      // Track daily net return
+      const dailyReturn = prevCapital > 0 ? (agent.capital - prevCapital) / prevCapital : 0;
+      agent.dailyReturns.push(dailyReturn);
+
       if (agent.capital < minCapitalAcrossRun) {
         minCapitalAcrossRun = agent.capital;
       }
@@ -276,26 +284,60 @@ export async function runOnePopulationSeed(
 
     currentRegime = nextRegime;
 
-    // 5. Reproduction check: capital >= 1.5 * initialCapital ($3,000 for founders)
-    const multiplier = config.population.reproductionThresholdMultiplier ?? 1.5;
-    const candidates = agents.filter((a) => a.alive && a.capital >= multiplier * a.initialCapital);
-    for (const parent of candidates) {
-      const childId = `agent-${nextAgentId++}`;
-      const { child, transferAmount } = reproduceAgent(parent, childId, t);
-      agents.push(child);
+    // 5. Reproduction check: Phase 2 Statistical Gate (§7.1, §7.3)
+    // Monthly evaluation frequency with capital pre-filter >= 1.5x initialCapital,
+    // calendar age >= 365 days, and cooldown >= 180 days.
+    if (t > 0 && t % 30 === 0) {
+      const multiplier = config.population.reproductionThresholdMultiplier ?? 1.5;
+      const candidates = agents.filter(
+        (a) =>
+          a.alive &&
+          (t - a.birthStep) >= DEFAULT_REPRODUCTION_GATE_CONFIG.minCalendarDays &&
+          a.capital >= multiplier * a.initialCapital &&
+          (a.lastReproductionStep === null || (t - a.lastReproductionStep) >= DEFAULT_REPRODUCTION_GATE_CONFIG.cooldownDays),
+      );
 
-      events.push({
-        step: t,
-        type: 'REPRODUCTION',
-        agentId: parent.id,
-        details: { childId, transferAmount, parentCapitalAfter: parent.capital },
-      });
-      events.push({
-        step: t,
-        type: 'BIRTH',
-        agentId: child.id,
-        details: { parentId: parent.id, generation: child.generation, capital: child.capital },
-      });
+      if (candidates.length > 0) {
+        const livingCurrent = agents.filter((a) => a.alive);
+        for (const parent of candidates) {
+          if (!parent.alive || parent.capital < multiplier * parent.initialCapital) continue;
+
+          const gateDecision = evaluateReproductionGate(
+            parent,
+            t,
+            livingCurrent,
+            DEFAULT_REPRODUCTION_GATE_CONFIG,
+            seed * 10000 + t,
+          );
+
+          if (gateDecision.admitted) {
+            const childId = `agent-${nextAgentId++}`;
+            const { child, transferAmount } = reproduceAgent(parent, childId, t);
+            agents.push(child);
+
+            events.push({
+              step: t,
+              type: 'REPRODUCTION',
+              agentId: parent.id,
+              details: {
+                childId,
+                transferAmount,
+                parentCapitalAfter: parent.capital,
+                dsr: gateDecision.dsr,
+                bootstrapLowerBound: gateDecision.bootstrapLowerBound,
+                meanExcessReturn: gateDecision.moments.mean,
+                sharpeAnnualized: gateDecision.moments.sharpeAnnualized,
+              },
+            });
+            events.push({
+              step: t,
+              type: 'BIRTH',
+              agentId: child.id,
+              details: { parentId: parent.id, generation: child.generation, capital: child.capital },
+            });
+          }
+        }
+      }
     }
 
     livingCounts[t + 1] = agents.filter((a) => a.alive).length;

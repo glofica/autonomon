@@ -93,9 +93,13 @@ async function main() {
   console.log('- Product setup ($5,000): passive runway is 125 months. The agent has');
   console.log('  time to learn, operate, and reproduce. This is the recommended');
   console.log('  deployment configuration for new owners.');
-  console.log('- Reproduction requires the full gate per §7.1 (DSR ≥ 0.95, 365-day');
-  console.log('  window), which is not implemented in Phase 1. Phase 1 uses a');
-  console.log('  simplified 1.5x capital gate for demonstration.');
+  console.log('- Phase 2 Reproduction Gate: Implements the full statistical reproduction');
+  console.log('  gate per §7.1 (365-day history window, strictly positive excess returns,');
+  console.log('  one-sided 95% bootstrap CI > 0 with 1,000 resamples, Deflated Sharpe Ratio');
+  console.log('  (DSR) ≥ 0.95 under Bailey & López de Prado (2014) with Proposition 10');
+  console.log('  effective-trial correction, and 180-day cooldown). Mitosis only occurs');
+  console.log('  when statistically verified edge is confirmed, preventing spurious reproduction');
+  console.log('  under the null.');
 
   console.log(`\n=== Verdict: ${report.passed ? 'PASS' : 'FAIL'} ===`);
   console.log(`Report written to: ${report.reportPath}`);

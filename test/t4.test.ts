@@ -15,6 +15,15 @@ import {
   T4_CONFIG_SCENARIO_C,
 } from '../tests/t4/runner.js';
 import { SeededPRNG } from '../tests/t2/runner.js';
+import {
+  normalCDF,
+  normalInvCDF,
+  computeMoments,
+  computeBootstrapMeanLowerBound,
+  computeDSR,
+  evaluateReproductionGate,
+  DEFAULT_REPRODUCTION_GATE_CONFIG,
+} from '../tests/t4/reproduction-gate.js';
 
 describe('T4 — Economic Population Simulator (Two-Regime Persistent Market)', () => {
   it('creates founder agents with independent state and Q-learning tables', () => {
@@ -133,5 +142,89 @@ describe('T4 — Economic Population Simulator (Two-Regime Persistent Market)', 
     // Passive runway at $40/mo: $800 / $40 = 20 months
     const stressRunwayMonths = T4_CONFIG_SCENARIO_A.population.initialCapitalPerFounder / totalMonthlyCost;
     expect(stressRunwayMonths).toBe(20);
+  });
+
+  describe('Phase 2 — Statistical Reproduction Gate (§7.1, §7.3, Proposition 10)', () => {
+    it('approximates standard normal CDF and inverse CDF with high precision', () => {
+      expect(normalCDF(0)).toBeCloseTo(0.5, 6);
+      expect(normalCDF(1.96)).toBeCloseTo(0.975, 2);
+      expect(normalCDF(-1.96)).toBeCloseTo(0.025, 2);
+
+      expect(normalInvCDF(0.5)).toBeCloseTo(0.0, 4);
+      expect(normalInvCDF(0.975)).toBeCloseTo(1.96, 2);
+      expect(normalInvCDF(0.05)).toBeCloseTo(-1.645, 2);
+    });
+
+    it('computes sample moments including mean, variance, skewness, and kurtosis', () => {
+      const returns = [0.01, 0.02, -0.01, 0.03, -0.02, 0.01, 0.04];
+      const moments = computeMoments(returns);
+
+      expect(moments.n).toBe(7);
+      expect(moments.mean).toBeGreaterThan(0);
+      expect(moments.variance).toBeGreaterThan(0);
+      expect(moments.stdDev).toBeCloseTo(Math.sqrt(moments.variance), 6);
+      expect(moments.sharpeDaily).toBeCloseTo(moments.mean / moments.stdDev, 6);
+      expect(moments.sharpeAnnualized).toBeCloseTo(moments.sharpeDaily * Math.sqrt(365), 4);
+    });
+
+    it('computes one-sided 95% bootstrap lower bound for return mean', () => {
+      // Consistently positive returns
+      const positiveReturns = Array.from({ length: 100 }, () => 0.005 + (Math.random() * 0.002));
+      const bLowerPos = computeBootstrapMeanLowerBound(positiveReturns, 500, 0.05, 42);
+      expect(bLowerPos).toBeGreaterThan(0);
+
+      // Symmetrically distributed zero-mean returns
+      const zeroReturns = Array.from({ length: 100 }, (_, i) => (i % 2 === 0 ? 0.01 : -0.01));
+      const bLowerZero = computeBootstrapMeanLowerBound(zeroReturns, 500, 0.05, 42);
+      expect(bLowerZero).toBeLessThanOrEqual(0);
+    });
+
+    it('calculates Deflated Sharpe Ratio (DSR) under Bailey & López de Prado (2014)', () => {
+      const populationSharpes = [0.8, 1.2, 0.5, 1.5, 0.9, 1.1, 0.7, 1.0];
+      // High Sharpe ratio candidate with 500 observations
+      const dsrHigh = computeDSR(2.5, 500, 0.0, 3.0, populationSharpes, 0.5);
+      expect(dsrHigh).toBeGreaterThan(0.95);
+
+      // Low Sharpe ratio candidate
+      const dsrLow = computeDSR(0.8, 500, 0.0, 3.0, populationSharpes, 0.5);
+      expect(dsrLow).toBeLessThan(0.90);
+    });
+
+    it('enforces all 5 reproduction gate criteria in evaluateReproductionGate', () => {
+      const founder = createFounder('parent', 5000);
+
+      // Case 1: Young agent (< 365 days) fails ageCheck
+      founder.capital = 8000;
+      const dec1 = evaluateReproductionGate(founder, 200, [founder], DEFAULT_REPRODUCTION_GATE_CONFIG);
+      expect(dec1.admitted).toBe(false);
+      expect(dec1.checks.ageCheck.passed).toBe(false);
+
+      // Case 2: Sufficient age, but low capital (< 1.5x initial) fails capitalPreFilter
+      founder.capital = 6000;
+      const dec2 = evaluateReproductionGate(founder, 400, [founder], DEFAULT_REPRODUCTION_GATE_CONFIG);
+      expect(dec2.admitted).toBe(false);
+      expect(dec2.checks.capitalPreFilter.passed).toBe(false);
+
+      // Case 3: Recent reproduction within cooldown (< 180 days) fails cooldownCheck
+      founder.capital = 8000;
+      founder.lastReproductionStep = 300;
+      const dec3 = evaluateReproductionGate(founder, 400, [founder], DEFAULT_REPRODUCTION_GATE_CONFIG);
+      expect(dec3.admitted).toBe(false);
+      expect(dec3.checks.cooldownCheck.passed).toBe(false);
+
+      // Case 4: Mature agent with strong edge passes all checks and verifies funds
+      founder.lastReproductionStep = null;
+      founder.dailyReturns = Array.from({ length: 400 }, (_, i) => 0.001 + (i % 2 === 0 ? 0.0005 : -0.0005));
+      const dec4 = evaluateReproductionGate(founder, 400, [founder], DEFAULT_REPRODUCTION_GATE_CONFIG);
+      expect(dec4.checks.ageCheck.passed).toBe(true);
+      expect(dec4.checks.capitalPreFilter.passed).toBe(true);
+      expect(dec4.checks.cooldownCheck.passed).toBe(true);
+      expect(dec4.checks.meanReturnCheck.passed).toBe(true);
+      expect(dec4.checks.bootstrapCheck.passed).toBe(true);
+      expect(dec4.checks.dsrCheck.passed).toBe(true);
+      expect(dec4.checks.fundsCheck.passed).toBe(true);
+      expect(dec4.admitted).toBe(true);
+      expect(dec4.transferAmount).toBe(1500); // 50% of ($8000 - $5000 surplus)
+    });
   });
 });
