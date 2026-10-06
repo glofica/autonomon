@@ -23,7 +23,7 @@ The evaluation protocol in paper §14 specifies four falsifiable tests. All repo
 - **T1 family:** The agent does not fabricate edge from noise. With the safety layer active, maximum drawdown is bounded at 6.11% across 30 seeds.
 - **T2:** The Q-learning policy converges to the optimal action set on a known, stationary MDP (100% agreement, sup-norm error 0.075).
 - **T3:** Constant-step adaptation is approximately 15× faster than diminishing step under a documented regime change (146 vs 2,197 steps), validating Proposition 8.
-- **T4:** With $5,000 capital, the agent survives 100% of 24-month simulations in all three market scenarios. Under stress ($800 capital), survival diverges by regime: 34.33% in bull-dominant, 2.67% in symmetric, 0.67% in bear-dominant at 18 months.
+- **T4:** With $5,000 capital, the agent survives 100% of 24-month simulations in all three market scenarios. Under Phase 2 and Phase 3, reproduction requires the full statistical reproduction gate (§7.1: DSR ≥ 0.95, 365-day bootstrap CI > 0, 180-day cooldown) with biological inheritance (§7: genome mutation in Ω, Q-table in [-B_Q, B_Q]). Achieves 0.00% false reproduction under null (1,000 agents) and identifies $2,000 USD minimum viable capital.
 
 ## Reproducibility
 
@@ -72,7 +72,6 @@ All tests run on **30 independent seeds**. Generators, parameters, budgets, sche
 
 | Test | Description | Status |
 |---|---|---|
-| T4 Phase 2 | Full reproduction gate (DSR ≥ 0.95, 365-day window) | Pending |
 | T5 | Short-capability validation | Roadmap |
 
 ---

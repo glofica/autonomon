@@ -312,7 +312,8 @@ export async function runOnePopulationSeed(
 
           if (gateDecision.admitted) {
             const childId = `agent-${nextAgentId++}`;
-            const { child, transferAmount } = reproduceAgent(parent, childId, t);
+            const reproRng = new SeededPRNG(seed * 100000 + t);
+            const { child, transferAmount } = reproduceAgent(parent, childId, t, {}, { rng: reproRng });
             agents.push(child);
 
             events.push({

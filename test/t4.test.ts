@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { createFounder, reproduceAgent } from '../tests/t4/population.js';
+import {
+  createFounder,
+  reproduceAgent,
+  mutateGenome,
+  inheritQTableWithPerturbation,
+  B_Q,
+} from '../tests/t4/population.js';
+import { DEFAULT_GENOME } from '../src/genome/types.js';
+import { wilsonScoreInterval } from '../tests/t4/false-reproduction.js';
+import { runMinimumCapitalSweep } from '../tests/t4/minimum-capital.js';
 import { deductOperatingCosts, T4_DEFAULT_COST_CONFIG } from '../tests/t4/costs.js';
 import {
   generateStepShocks,
@@ -225,6 +234,99 @@ describe('T4 — Economic Population Simulator (Two-Regime Persistent Market)', 
       expect(dec4.checks.fundsCheck.passed).toBe(true);
       expect(dec4.admitted).toBe(true);
       expect(dec4.transferAmount).toBe(1500); // 50% of ($8000 - $5000 surplus)
+    });
+  });
+
+  describe('Phase 3 — Genome Inheritance, Minimum Capital & Null Model (§7, §12, §14)', () => {
+    it('mutates child genome ensuring all 7 loci remain strictly within Omega per Proposition 5', () => {
+      const rng = new SeededPRNG(12345);
+      for (let trial = 0; trial < 100; trial++) {
+        const childGen = mutateGenome(DEFAULT_GENOME, rng);
+
+        expect(childGen.g_risk).toBeGreaterThanOrEqual(0.10);
+        expect(childGen.g_risk).toBeLessThanOrEqual(5.00);
+
+        expect(childGen.g_tau).toBeGreaterThanOrEqual(5);
+        expect(childGen.g_tau).toBeLessThanOrEqual(60);
+        expect(Number.isInteger(childGen.g_tau)).toBe(true);
+
+        expect(childGen.g_epsilon).toBeGreaterThanOrEqual(0.05);
+        expect(childGen.g_epsilon).toBeLessThanOrEqual(0.50);
+
+        expect(childGen.g_alpha).toBeGreaterThanOrEqual(0.01);
+        expect(childGen.g_alpha).toBeLessThanOrEqual(0.25);
+
+        expect(childGen.g_gas).toBeGreaterThanOrEqual(100);
+        expect(childGen.g_gas).toBeLessThanOrEqual(1000);
+        expect(Number.isInteger(childGen.g_gas)).toBe(true);
+
+        expect(childGen.g_omega).toBeGreaterThanOrEqual(0.05);
+        expect(childGen.g_omega).toBeLessThanOrEqual(0.40);
+
+        expect(childGen.g_mitosis).toBeGreaterThanOrEqual(1.50);
+        expect(childGen.g_mitosis).toBeLessThanOrEqual(3.00);
+      }
+    });
+
+    it('inherits and perturbs parent Q-table with strict clipping to [-B_Q, B_Q] per Proposition 2', () => {
+      const parentQTable: Record<string, Record<string, number>> = {
+        BULL_FLAT: {
+          ACQUIRE_SPOT: 19.98,
+          HOLD: -19.95,
+          DISPOSE_SPOT: 0.0,
+        },
+        BEAR_HEAVY: {
+          DISPOSE_SPOT: 15.0,
+          HOLD: -10.0,
+        },
+      };
+
+      const rng = new SeededPRNG(42);
+      const childQTable = inheritQTableWithPerturbation(parentQTable, 0.5, B_Q, rng);
+
+      expect(childQTable.BULL_FLAT.ACQUIRE_SPOT).toBeLessThanOrEqual(20.0);
+      expect(childQTable.BULL_FLAT.ACQUIRE_SPOT).toBeGreaterThanOrEqual(-20.0);
+      expect(childQTable.BULL_FLAT.HOLD).toBeGreaterThanOrEqual(-20.0);
+      expect(childQTable.BEAR_HEAVY.DISPOSE_SPOT).toBeLessThanOrEqual(20.0);
+      expect(childQTable.BEAR_HEAVY.DISPOSE_SPOT).toBeGreaterThanOrEqual(-20.0);
+    });
+
+    it('reproduceAgent transfers capital, mutates genome, and perturbs Q-table simultaneously', () => {
+      const parent = createFounder('parent', 5000);
+      parent.capital = 8000;
+      parent.ql.update('BULL_FLAT', 'ACQUIRE_SPOT', 1.0, 'BULL_LIGHT');
+
+      const rng = new SeededPRNG(777);
+      const { child, transferAmount } = reproduceAgent(parent, 'child-1', 400, {}, { rng });
+
+      expect(transferAmount).toBe(1500);
+      expect(parent.capital).toBe(6500);
+      expect(child.capital).toBe(1500);
+      expect(child.generation).toBe(1);
+
+      // Mutated genome within Omega
+      expect(child.genome.g_risk).toBeGreaterThanOrEqual(0.10);
+      expect(child.genome.g_risk).toBeLessThanOrEqual(5.00);
+
+      // Inherited perturbed Q-value within [-B_Q, B_Q]
+      const childQVal = child.ql.getQ('BULL_FLAT', 'ACQUIRE_SPOT');
+      expect(childQVal).toBeGreaterThanOrEqual(-B_Q);
+      expect(childQVal).toBeLessThanOrEqual(B_Q);
+    });
+
+    it('calculates Wilson score interval for binomial proportions', () => {
+      const [low, high] = wilsonScoreInterval(1, 1000);
+      expect(low).toBeGreaterThan(0);
+      expect(high).toBeLessThan(0.01); // < 1%
+    });
+
+    it('runs minimum capital sweep across test levels identifying viability threshold', async () => {
+      const sweep = await runMinimumCapitalSweep([800, 5000], 5);
+      expect(sweep.levels.length).toBe(2);
+      expect(sweep.levels[0].capital).toBe(800);
+      expect(sweep.levels[1].capital).toBe(5000);
+      expect(sweep.minimumViableCapital).toBeGreaterThan(0);
+      expect(sweep.targetThreshold).toBe(0.90);
     });
   });
 });

@@ -104,9 +104,102 @@ export function createFounder(
 }
 
 /**
+ * Bound for Q-table values per Paper §7 Proposition 2:
+ * B_Q >= R_max / (1 - gamma) = 1.0 / (1 - 0.95) = 20.0
+ */
+export const B_Q = 20.0;
+
+function sampleGaussian(rng?: { next: () => number }): number {
+  let u = 0;
+  let v = 0;
+  while (u === 0) u = rng ? rng.next() : Math.random();
+  while (v === 0) v = rng ? rng.next() : Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+function sampleFiniteGaussian(stdev = 0.05, rng?: { next: () => number }): number {
+  let val: number;
+  do {
+    const z = sampleGaussian(rng);
+    val = z * stdev;
+  } while (!Number.isFinite(val));
+  return val;
+}
+
+/**
+ * Mutates all 7 loci of parent genome per Paper §7 & Proposition 5:
+ *   g_i^child = clip(g_i^parent * (1 + xi_i), l_i, u_i)
+ *   xi_i ~ N(0, 0.05^2)
+ *
+ * Guarantees g^child in Omega strictly.
+ */
+export function mutateGenome(
+  parentGenome: Genome,
+  rng?: { next: () => number },
+): Genome {
+  const mutateFloat = (val: number, min: number, max: number): number => {
+    const xi = sampleFiniteGaussian(0.05, rng);
+    const raw = val * (1 + xi);
+    const clamped = Math.max(min, Math.min(max, raw));
+    return Number(clamped.toFixed(4));
+  };
+
+  const mutateInt = (val: number, min: number, max: number): number => {
+    const xi = sampleFiniteGaussian(0.05, rng);
+    const raw = val * (1 + xi);
+    const clamped = Math.max(min, Math.min(max, raw));
+    return Math.round(clamped);
+  };
+
+  return {
+    g_risk: mutateFloat(parentGenome.g_risk, 0.10, 5.00),
+    g_tau: mutateInt(parentGenome.g_tau, 5, 60),
+    g_epsilon: mutateFloat(parentGenome.g_epsilon, 0.05, 0.50),
+    g_alpha: mutateFloat(parentGenome.g_alpha, 0.01, 0.25),
+    g_gas: mutateInt(parentGenome.g_gas, 100, 1000),
+    g_omega: mutateFloat(parentGenome.g_omega, 0.05, 0.40),
+    g_mitosis: mutateFloat(parentGenome.g_mitosis, 1.50, 3.00),
+  };
+}
+
+/**
+ * Inherits and perturbs parent Q-table per Paper §7 Proposition 2:
+ *   Q_child(s,a) = clip(Q_parent(s,a) + zeta_{s,a}, -B_Q, B_Q)
+ *   B_Q >= R_max / (1 - gamma) = 20.0
+ */
+export function inheritQTableWithPerturbation(
+  parentQTable: Record<string, Record<string, number>>,
+  sigmaQ: number = 0.02,
+  bQ: number = B_Q,
+  rng?: { next: () => number },
+): Record<string, Record<string, number>> {
+  const childTable: Record<string, Record<string, number>> = {};
+  for (const [state, actions] of Object.entries(parentQTable)) {
+    childTable[state] = {};
+    for (const [action, qVal] of Object.entries(actions)) {
+      const zeta = sampleFiniteGaussian(sigmaQ, rng);
+      const perturbed = Math.max(-bQ, Math.min(bQ, qVal + zeta));
+      childTable[state][action] = perturbed;
+    }
+  }
+  return childTable;
+}
+
+export interface ReproductionOptions {
+  mutate?: boolean;
+  rng?: { next: () => number };
+  sigmaQ?: number;
+  bQ?: number;
+}
+
+/**
  * Spawns a child agent via surplus transfer per Paper §7.3 & Proposition 6:
  *   L_surplus = max(0, capital - initialCapital)
  *   Transfer T = 0.5 * L_surplus
+ *
+ * Implements biological inheritance per Paper §7:
+ *   - Mutated genome: g_child in Omega (Proposition 5)
+ *   - Perturbed Q-table: Q_child in [-B_Q, B_Q] (Proposition 2)
  *
  * Child receives capital = T. Parent retains capital - T.
  * Aggregate capital is strictly conserved across the division event.
@@ -116,6 +209,7 @@ export function reproduceAgent(
   childId: string,
   step: number,
   qlConfig: Partial<QLearningConfig> = {},
+  options?: ReproductionOptions,
 ): { child: AgentRecord; transferAmount: number } {
   const surplus = Math.max(0, parent.capital - parent.initialCapital);
   const transfer = 0.5 * surplus;
@@ -125,19 +219,28 @@ export function reproduceAgent(
   parent.reproductionCount++;
   parent.lastReproductionStep = step;
 
-  // Child inherits parent genome and starts with transfer capital
+  // Phase 3: Genome mutation (or identity if mutate === false)
+  const shouldMutate = options?.mutate ?? true;
+  const childGenome = shouldMutate
+    ? mutateGenome(parent.genome, options?.rng)
+    : { ...parent.genome };
+
+  // Child inherits mutated learning rate and exploration from mutated genome
   const childQl = new QLearning(ACTION_IDS, {
-    alpha: parent.genome.g_alpha,
+    alpha: childGenome.g_alpha,
     gamma: 0.95,
-    epsilon: parent.genome.g_epsilon,
+    epsilon: childGenome.g_epsilon,
     epsilonDecay: 0.9995,
     epsilonMin: 0.05,
     ...qlConfig,
   });
 
-  // Inherit parent Q-table knowledge (bounded policy inheritance §7)
+  // Phase 3: Inherit parent Q-table knowledge with bounded perturbation
   const parentQData = parent.ql.exportQTable();
-  childQl.importQTable(parentQData);
+  const childQData = shouldMutate
+    ? inheritQTableWithPerturbation(parentQData, options?.sigmaQ ?? 0.02, options?.bQ ?? B_Q, options?.rng)
+    : parentQData;
+  childQl.importQTable(childQData);
 
   const child: AgentRecord = {
     id: childId,
@@ -146,7 +249,7 @@ export function reproduceAgent(
     capital: transfer,
     initialCapital: transfer,
     peakCapital: transfer,
-    genome: { ...parent.genome },
+    genome: childGenome,
     alive: true,
     tradesCount: 0,
     birthStep: step,
@@ -160,3 +263,4 @@ export function reproduceAgent(
 
   return { child, transferAmount: transfer };
 }
+
