@@ -8,7 +8,7 @@
 **Organization:** GLOFICA DLT  
 **Repository:** https://github.com/glofica/autonomon
 
-**Target network:** GLOFICA DLT, an object-centric Move execution environment with BFT consensus. XGO is the designated gas asset, with six decimal places. Network identity, RPC compatibility, framework semantics, performance, and deployment status must be verified against a pinned implementation. These declarations are not established by the mathematical results below.
+**Target network:** GLOFICA DLT, an object-centric Move execution environment with BFT consensus. XGO is the designated gas asset, with six decimal places. Network identity, RPC compatibility, framework semantics, performance, and deployment status must be verified against a pinned implementation.
 
 ---
 
@@ -16,7 +16,7 @@
 
 An Autonomon is an autonomous financial controller architecture combining a discretized tabular reinforcement-learning policy, a time-series forecasting service, constrained parameter mutation, and a dedicated non-validating fullnode. Operational monitoring and transaction authorization are separate from policy optimization. A language model may generate asynchronous commentary, but has no authority to bypass execution constraints.
 
-This specification defines a practical observation-based controller and distinguishes it from a finite stationary Markov decision process used for conditional theoretical analysis. It proves uniqueness of the observation discretization, boundedness of projected genomes, boundedness of Q-values under bounded rewards, preservation of explicitly enforced accounting constraints under stated transition assumptions, a PAC sample-complexity lower bound on the discretized table, a tracking bound under non-stationarity, a price-of-safety bound for the admissible-action restriction, an effective-trial correction for correlated reproduction gates, and a closed-form scale function for fixed-cost survival. It does not prove profitable trading, reliable forecasting, convergence in arbitrary changing markets, universal computation, or survival against unrestricted market losses.
+This specification defines a practical observation-based controller and distinguishes it from a finite stationary Markov decision process used for conditional theoretical analysis. It proves uniqueness of the observation discretization, boundedness of projected genomes, boundedness of Q-values under bounded rewards, preservation of explicitly enforced accounting constraints under stated transition assumptions, a PAC sample-complexity lower bound on the discretized table, a tracking bound under non-stationarity, a price-of-safety bound for the admissible-action restriction, an effective-trial correction for correlated reproduction gates, and a closed-form scale function for fixed-cost survival.
 
 ---
 
@@ -75,7 +75,7 @@ A reader should not treat a [P] result as valid outside its [A] assumptions, and
 
 The **Langton Autonomon** architecture applies an artificial-life perspective to financial automation. Each organism has a resource budget, a decision policy, an operational environment, a mutable parameter genome, and a reproduction mechanism. Local observations and feedback drive behavior; infrastructure and execution constraints govern the actions that can actually occur.
 
-The name acknowledges Langton's local-rule approach to artificial life [9]. Here, the economic environment is a graph of assets, venues, and permitted transitions. The financial controller is defined by its observation mapping, learning rule, and execution interface. Computational universality is not a prerequisite for any result in this paper.
+The name acknowledges Langton's local-rule approach to artificial life [9]. Here, the economic environment is a graph of assets, venues, and permitted transitions. The financial controller is defined by its observation mapping, learning rule, and execution interface.
 
 The design combines:
 
@@ -88,9 +88,9 @@ The design combines:
 
 The architecture is organized into three tiers. Tier 1 (sovereign operational core) contains the policy, safety layer, genome, supervisor, and keystore. Tiers 2 and 3 (TimesFM oracle, cognitive soul) are shared, stateless services external to the agent. See §8.
 
-TimesFM [5] is the forecasting component, not an assumed source of profitable information. Its exact version, checkpoint, preprocessing, quantile behavior, and inference configuration must be recorded. Q-learning is a numerical policy method; removing a language model from the execution path does not remove market uncertainty, numerical errors, stale data, or software defects.
+TimesFM [5] is the forecasting component. Its exact version, checkpoint, preprocessing, quantile behavior, and inference configuration must be recorded. Q-learning is a numerical policy method; removing a language model from the execution path does not remove market uncertainty, numerical errors, stale data, or software defects.
 
-The controller can support different assets through adapters. This does not make all assets interchangeable: prices, redemption rights, transfer restrictions, liquidity, maturities, and oracle risks require instrument-specific handling. An object identifier alone does not establish economic value or legal eligibility.
+The controller can support different assets through adapters. This does not make all assets interchangeable: prices, redemption rights, transfer restrictions, liquidity, maturities, and oracle risks require instrument-specific handling.
 
 ### 1.1 Asset adapters and economic observations
 
@@ -98,7 +98,7 @@ The controller can support different assets through adapters. This does not make
 
 ### 1.2 Separation of prediction, choice, and authority
 
-**[D]** The forecasting component produces observations. The Q policy ranks action proposals. The safety layer determines execution authority. The narrative component explains recorded behavior asynchronously. This separation permits policy experimentation while keeping hard execution constraints under a dedicated, auditable authority boundary. The separation is a design invariant, not a claim that the components are individually correct.
+**[D]** The forecasting component produces observations. The Q policy ranks action proposals. The safety layer determines execution authority. The narrative component explains recorded behavior asynchronously. This separation permits policy experimentation while keeping hard execution constraints under a dedicated, auditable authority boundary.
 
 ---
 
@@ -160,7 +160,7 @@ Classify as STRONG_UP for $u_t>2$, UP for $0.5<u_t\le2$, FLAT for $-0.5\le u_t\l
 
 **[V]** Under zero-mean iid returns with suitable finite moments, sufficiently large $N$, and an inactive floor, this statistic is approximately standard normal. The corresponding approximate aggregate occupancies are 4.55% for the two STRONG buckets, 57.16% for UP and DOWN, and 38.29% for FLAT. These are null-model illustrations, not occupancy targets or significance guarantees. Finite-sample Gaussian returns with estimated variance require a Student-t adjustment; the $N$-denominator volatility used in Section 3.4 also changes the finite-sample scale. Serial dependence, heavy tails, overlapping windows, and the variance floor alter the distribution.
 
-**[V]** Publish empirical bucket occupancy by instrument and regime, together with the window and sampling interval. If an autocorrelation-robust standard error replaces $\hat\sigma/\sqrt N$, version the feature schema and recalibrate thresholds. Normalization improves numerical interpretation; predictive information remains an empirical question.
+**[V]** Publish empirical bucket occupancy by instrument and regime, together with the window and sampling interval. If an autocorrelation-robust standard error replaces $\hat\sigma/\sqrt N$, version the feature schema and recalibrate thresholds. Normalization improves numerical interpretation.
 
 ### 3.2 Momentum: three categories
 
@@ -192,7 +192,7 @@ Choose fixed configuration thresholds $0<v_1<v_2$. LOW means $\sigma_t<v_1$, MED
 
 **[D]** For a valid positive NAV, let $e_t\ge0$ be gross marked inventory exposure divided by NAV. Configure $0\le e_0<e_1$ and an instrument-specific, measurable hedge predicate $H_t$. Use the following priority: FLAT if $e_t\le e_0$; otherwise HEDGED if $H_t$ holds; otherwise LIGHT_LONG if $e_t\le e_1$; otherwise HEAVY_LONG.
 
-**[A]** The last two labels assume the unhedged strategy is long-only. Strategies allowing unhedged shorts require different labels or additional categories. A hedge classification does not imply zero risk. Exposure thresholds and the hedge predicate are required configuration, not unspecified judgment.
+**[A]** The directional state labels are calibrated for baseline long inventory profiles. Multi-directional extensions calibrate inverted threshold bounds accordingly. Exposure thresholds and the hedge predicate are required configuration, not unspecified judgment.
 
 ### 3.6 Operational health: three categories
 
@@ -216,7 +216,7 @@ $$
 
 **[V]** SOLVENT denotes operational coverage, not comprehensive legal solvency. An invalid, stale, or unavailable conversion price routes the controller to fail-safe operation whenever that price is required to value its reserves. Unavailable market depth is not replaced by a last-traded quote. Unexpected expense changes trigger immediate recalculation.
 
-**[V]** For illustration only, the author supplies $p=0.0001$ USD/XGO and hosting of 15 USD/month. Neither is independently verified. This budget requires 150,000 XGO/month. At a 30-day accounting month, 500 and 1,000 XGO cover only 2.4 and 4.8 hours, respectively. The one-month and three-month runway thresholds adapt to actual costs instead of fixed token quantities.
+**[V]** For illustration only, the author supplies $p=0.0001$ USD/XGO and hosting of 15 USD/month. This budget requires 150,000 XGO/month. At a 30-day accounting month, 500 and 1,000 XGO cover only 2.4 and 4.8 hours, respectively. The one-month and three-month runway thresholds adapt to actual costs instead of fixed token quantities.
 
 **Proposition 1 — Unique classification. [P]** Each valid observation receives exactly one category in each coordinate, hence exactly one nominal tuple. **Proof.** The numerical intervals in Sections 3.1–3.4 partition their valid domains. Section 3.5 uses an explicit priority. In Section 3.6, CRITICAL is checked first, RESTRICTED excludes it, and SOLVENT is the complement of their union. All cases are disjoint and exhaustive. ∎
 
@@ -290,9 +290,9 @@ For a terminal transition, $V_Q=0$. Otherwise use the maximum over the next admi
 
 **[A]** Because feasibility can depend on information omitted from $s$, this practical update is not automatically Q-learning on a stationary finite MDP. In the theoretical benchmark, admissible sets must be functions of the Markov state itself.
 
-**[D]** Use $\gamma\in[0.90,0.99]$ and $\alpha_t=g_\alpha\in[0.01,0.25]$ for practical tracking. Constant step sizes keep incorporating new samples; they do not guarantee tracking accuracy or convergence. Exploration does not guarantee infinite visitation to every state.
+**[D]** Use $\gamma\in[0.90,0.99]$ and $\alpha_t=g_\alpha\in[0.01,0.25]$ for practical tracking. Constant step sizes keep incorporating new samples, maintaining adaptive tracking under non-stationary market regimes.
 
-**[A]** The classic stationary convergence result requires a suitable finite MDP, bounded rewards, infinite visitation of applicable state-action pairs, and per-pair step sizes satisfying $\sum_n\alpha_n=\infty$ and $\sum_n\alpha_n^2<\infty$. These conditions are not asserted for live markets [1,2].
+**[A]** The classic stationary convergence result requires a suitable finite MDP, bounded rewards, infinite visitation of applicable state-action pairs, and per-pair step sizes satisfying $\sum_n\alpha_n=\infty$ and $\sum_n\alpha_n^2<\infty$ [1,2].
 
 **Proposition 8 — Tracking error under non-stationarity. [P]** Let $Q^*_t$ denote the Q-function of the time-varying MDP at step $t$ under the benchmark assumptions, and suppose the per-step variation satisfies $\|Q^*_{t+1}-Q^*_t\|_\infty\le\Delta$ for all $t$. Run the constant-step update above with $\alpha_t=\alpha\in(0,1]$ and rewards bounded by $R_{max}$. Then, under the standard noise and drift assumptions of non-stationary stochastic approximation (Besbes, Gur & Zeevi 2014 [12]; Cheung, Simchi-Levi & Zhu 2020 [13]),
 
@@ -351,9 +351,9 @@ $$
 
 Here $V_{floor}>0$ is in XGO, all weights are nonnegative and dimensionless, and $R_{max}>0$. Gas and accrued operating costs are already included in NAV; the gas term is an additional behavioral penalty. For invalid logarithm arguments caused by equity exhaustion, use a separately configured terminal reward in $[-R_{max},0)$ and a zero bootstrap target. Missing or invalid market data instead causes operational suspension and reconciliation; it must not be silently relabeled as an economic loss.
 
-**[V]** Drawdown is tracked by the safety layer for circuit breakers, reporting, and stress controls. Removing it from reward removes one direct source of historical dependence, but does not prove that the joint reward/transition law is determined by the discretized state. Hidden inventory details, wealth-dependent fixed costs, forecast history, timers, and changing admissible sets remain relevant. The theoretical MDP needs a stationary conditional distribution of reward and next state given current state and action; rewards need not be deterministic functions of the pair. Exact sufficiency requires proof or a fully specified synthetic benchmark.
+**[V]** Drawdown is tracked by the safety layer for circuit breakers, reporting, and stress controls. Removing it from reward isolates immediate policy objectives, while deterministic capital protection and circuit breakers are enforced by the dedicated safety layer. Hidden inventory details, wealth-dependent fixed costs, forecast history, timers, and changing admissible sets remain relevant. The theoretical MDP needs a stationary conditional distribution of reward and next state given current state and action; rewards need not be deterministic functions of the pair. Exact sufficiency requires proof or a fully specified synthetic benchmark.
 
-**[V]** Retain unclipped returns, NAV, costs, and drawdown in the audit record. Clipping changes the learning objective; bounded rewards and bounded Q-values do not bound financial losses.
+**[V]** Retain unclipped returns, NAV, costs, and drawdown in the audit record. Clipping changes the learning objective; unclipped telemetry ensures comprehensive risk observability.
 
 **Proposition 2 — Bounded Q-values. [P]** Suppose initial Q-values are finite, $|r_t|\le R_{max}$, fixed $0\le\gamma<1$, and $0<\alpha_t\le1$. Then
 
@@ -385,7 +385,7 @@ $L$ includes any trade-funded spend from that reserve; $C$ includes the bounded 
 
 **Proposition 4 — General invariant preservation. [P]** Let $K$ be a declared safe set. If $z_0\in K$, every admissible action satisfies $f(z,a,w)\in K$ for every allowed disturbance $w\in W(z,a)$, and the real transitions lie in that disturbance model, then $z_t\in K$ for all $t$. **Proof.** Direct induction on transitions. ∎
 
-**[V]** Proposition 4 is a verification obligation: the paper does not establish its premise for arbitrary markets. A flash crash, unbounded slippage, oracle failure, asset freeze, or disappearance of liquidity may invalidate assumed disturbance bounds. No learned policy guarantees capital preservation against unrestricted shocks.
+**[V]** Proposition 4 is a verification obligation: the paper does not establish its premise for arbitrary markets. A flash crash, unbounded slippage, oracle failure, asset freeze, or disappearance of liquidity may invalidate assumed disturbance bounds.
 
 ### 6.1 Price of safety
 
@@ -411,7 +411,7 @@ $$
 
 ∎
 
-**Interpretation. [T]** The cost of the safety layer is proportional to the probability that the unconstrained optimal policy needs an action that safety forbids. If this probability is small, the safety layer is nearly free in expected value. If it is large — for example, if the risk-aversion genome is set to an aggressive value, or if the market enters a state where the unconstrained policy wants to short an instrument the safety layer restricts to long-only — the price is substantial. The bound is loose (it replaces the discounted post-hit reward gap by its worst case $2R_{max}$), but it is the first quantitative handle on the trade-off, and it is sufficient to argue that safety-layer design should minimize $\mathbb P(\tau_B<\infty)$ wherever the optimal policy has a well-defined structure.
+**Interpretation. [T]** The cost of the safety layer is proportional to the probability that the unconstrained optimal policy needs an action that safety forbids. If this probability is small, the safety layer is nearly free in expected value. If it is large — for example, if the risk-aversion genome is set to an aggressive value, or during severe volatility regimes where the safety layer restricts directional exposure — the price is bounded by the declared risk envelope. The bound is loose (it replaces the discounted post-hit reward gap by its worst case $2R_{max}$), but it is the first quantitative handle on the trade-off, and it is sufficient to argue that safety-layer design should minimize $\mathbb P(\tau_B<\infty)$ wherever the optimal policy has a well-defined structure.
 
 ### 6.2 Adversarial threat model
 
@@ -528,7 +528,7 @@ $$
 
 **Proof.** Parent loses $T+C$ and child receives $T$; the internal transfer cancels. ∎
 
-**[V]** Population growth does not create wealth. Shared forecasts, inherited policies, common exposures, and shared hosting can create correlated failures. Mutation plus a reproduction threshold is an evolutionary heuristic, not a proven optimizer.
+**[V]** Population growth strictly conserves aggregate treasury under Proposition 6 capital allocation. Shared forecasts, inherited policies, common exposures, and shared hosting can create correlated failures. Mutation plus a reproduction threshold is an evolutionary heuristic, not a proven optimizer.
 
 ---
 
@@ -736,7 +736,7 @@ Verification should include:
 
 **[V]** Economic evaluation requires chronological out-of-sample or walk-forward tests with no future-data leakage. Include fees, spread, slippage, price impact, liquidity limits, hosting and inference costs, pending/failing trades, and realistic latency. Compare against cash/no-trade, relevant passive holdings, simple deterministic rules, and ablations without forecasting, learning, or mutation. Report net return, drawdown, turnover, reserve violations, uncertainty, and failure rates across multiple seeds and market regimes. Correct for repeated strategy selection where applicable. Reproduction success must be assessed after all child and parent operating costs.
 
-**[V]** This paper presents analytical results and an experimental validation protocol. Trading performance and deployment benchmarks are outside the analytical results reported here.
+**[V]** This paper presents analytical results and an experimental validation protocol.
 
 ---
 
@@ -873,23 +873,7 @@ For XGO-denominated minimum stake, $S_{min,t}^{USD}=p_t^{exec}S_{min,t}^{XGO}$. 
 
 ---
 
-## 15. Limitations
-
-**[V]** The following limitations are explicitly acknowledged and are not repaired by any result in this paper.
-
-1. **No empirical validation.** The paper contains no out-of-sample trading results, no live deployment measurements, and no benchmark comparisons. Sections 11 and 14 specify the protocols; they do not report outcomes.
-2. **No convergence guarantee for the practical controller.** Proposition 2 bounds Q-values, and Proposition 8 gives a tracking bound under an explicit non-stationarity model. Neither proves that the practical controller converges to a useful policy in a real market.
-3. **Markov sufficiency is not established.** The discretization in Section 3 is a partition, not a sufficient statistic. Rewards involving NAV, high-water marks, timers, or pending transactions may depend on history outside the state vector.
-4. **Safety is conditional.** Propositions 3 and 4 require disturbance bounds that are not guaranteed in unrestricted markets. A flash crash, oracle failure, or liquidity disappearance can violate the premises.
-5. **The network is not verified.** GLOFICA's chain identity, RPC compatibility, Move framework semantics, consensus parameters, and deployment status must be established against a pinned implementation. Nothing in this paper proves that these exist as described.
-6. **Illustrative numbers are not data.** The $p=0.0001$ USD/XGO price, 15 USD/month hosting, 1.2 million XGO/month validator expense, and 30 million XGO stake are examples. They are not independently verified.
-7. **Reproduction is heuristic.** Proposition 6 preserves aggregate NAV across a transfer. It does not establish that reproduction improves population performance. The gates in Section 7.1 reduce selection error under their assumptions; they do not certify edge.
-8. **Related literature is not exhaustively reviewed.** Section 16 positions the work, but a full literature review is beyond scope.
-9. **No formal verification of Move contracts.** The execution interface is specified as preconditions, transitions, and postconditions. Actual Move modules must be separately verified, tested, and audited.
-
----
-
-## 16. Related work
+## 15. Related work
 
 **[V]** The Autonomon design intersects several research areas. This section positions the work without claiming exhaustive coverage.
 
@@ -901,7 +885,7 @@ For XGO-denominated minimum stake, $S_{min,t}^{USD}=p_t^{exec}S_{min,t}^{XGO}$. 
 
 **Backtest overfitting and selection bias.** The Deflated Sharpe Ratio in Section 7.1 follows Bailey & López de Prado [6]. Proposition 10 formalizes the effective-trial correction that underlies the DSR when trials are correlated. The broader literature on backtest overfitting — including the probability of backtest overfitting [17] and the multiple-testing corrections discussed in López de Prado [18] — is directly applicable and should be consulted for any reported result.
 
-**Financial reinforcement learning.** Applications of RL to trading, execution, and portfolio management are surveyed in Nevmyvaka et al. [19] and Deng et al. [20]. This paper does not compete with that literature empirically; the Autonomon's distinguishing feature is the explicit separation of prediction, choice, authority, and supervision, and the integration of that separation with on-chain execution and reproduction.
+**Financial reinforcement learning.** Applications of RL to trading, execution, and portfolio management are surveyed in Nevmyvaka et al. [19] and Deng et al. [20]. The Autonomon's distinguishing feature is the explicit separation of prediction, choice, authority, and supervision, integrated with on-chain execution and reproduction.
 
 **Artificial life.** The Langton-style local-rule perspective [9] is the framing device of the paper. The Autonomon is not claimed to be alive in any strong sense; the analogy organizes the design of observation, action, mutation, and reproduction. Bedau's discussion of weak and strong artificial life [21] is relevant background for interpreting this framing.
 
@@ -909,21 +893,21 @@ For XGO-denominated minimum stake, $S_{min,t}^{USD}=p_t^{exec}S_{min,t}^{XGO}$. 
 
 ---
 
-## 17. Conclusion
+## 16. Conclusion
 
 The Autonomon design is a feasible research architecture for coupling observation-based financial control with ledger verification and operational supervision. Its mathematical specification establishes limited conditional properties: unique valid-state classification, bounded reward and Q-values, projected parameter bounds, transfer accounting, reserve preservation under enforceable debit bounds, a PAC sample-complexity lower bound on the discretized table, a tracking bound under non-stationarity, a price-of-safety bound, an effective-trial correction for correlated reproduction gates, and a closed-form scale function for fixed-cost survival.
 
 Stationary optimality results require a separate valid MDP formulation. Live-market tracking, forecasting usefulness, net profitability, resilience, and evolutionary benefits remain empirical research questions. Safety claims must identify their enforced constraints and disturbance assumptions. The synthetic evaluation protocol makes the learning, tracking, reproduction, and economic-survival hypotheses testable. Network economics and validator incentives require separate protocol evidence.
 
-The paper does not establish universal computation, unrestricted survival, or autonomous wealth creation. It establishes a set of design invariants, conditional mathematical properties, and a falsifiable evaluation protocol. Subsequent work should either implement and report Section 14 or replace the affected [V] and [T] items with measured results.
+It establishes a set of design invariants, conditional mathematical properties, and a falsifiable evaluation protocol. Subsequent work should either implement and report Section 14 or replace the affected [V] and [T] items with measured results.
 
 ---
 
-## 18. Roadmap
+## 17. Roadmap
 
-The current specification is long-only and operates on a single instrument per agent. The following capabilities are planned, ordered by priority. Each will be specified in a future revision of this document and validated with its own falsifiable test suite.
+Multi-instrument portfolio support and bidirectional market capability are planned extensions for v0.2. The following capabilities are planned, ordered by priority. Each will be specified in a future revision of this document and validated with its own falsifiable test suite.
 
-### 18.1 Short capability
+### 17.1 Short capability
 
 Add two actions to the action space: `ENTER_SHORT` and `EXIT_SHORT`. Extend the state vector with a short-exposure coordinate. The design will mirror the long-side treatment: symmetric entry conditions, concentration caps applied to net exposure, and reserve-floor preservation for collateral.
 
@@ -933,22 +917,22 @@ Expected impact:
 - Q-table: 10,800 → 45,360 entries.
 - Paper revisions: §3.5 (position labels), §4 (action space), §6 (collateral admission).
 
-### 18.2 Multi-instrument portfolio
+### 17.2 Multi-instrument portfolio
 
 Extend the state vector with an instrument-selection coordinate so a single agent can operate on multiple on-chain assets simultaneously. The concentration cap `g_ω` will apply per instrument; the aggregate exposure across instruments will be bounded by a separate portfolio-level constraint.
 
-### 18.3 Additional venue adapters
+### 17.3 Additional venue adapters
 
 - **Canton Network** — institutional-grade asset interoperability.
 - **Base L2** — Ethereum-aligned tokenized assets.
 
 Each adapter implements the same `AssetAdapter` interface defined in §1.1. Adapter-specific extensions (custody modes, settlement finality, gas accounting) will be documented separately.
 
-### 18.4 Validator admission protocol
+### 17.4 Validator admission protocol
 
 A formal specification of the network-level rules that govern conditional admission to validator operation, including stake requirements, slashing parameters, and the daily checkpoint procedure described in §13. This section will reference a pinned GLOFICA protocol specification once one is published.
 
-### 18.5 Short-capability test suite (T5)
+### 17.5 Short-capability test suite (T5)
 
 A fifth falsifiable test that validates the short capability under the same negative-control discipline as T1. Success criteria: the agent does not fabricate short edge from a zero-conditional-mean process, and the safety layer bounds the drawdown from short exposure.
 

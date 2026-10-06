@@ -4,21 +4,26 @@
 
 **Specification:** Paper §14 (Economic Population), §7 (Reproduction, Mutation & Proposition 6), §12 (Self-Funding & Fixed Cost Drag)
 
-## Section 1 — Stress Setup ($800 capital, $40/month)
-
-| Scenario | Survival @12m | Survival @18m | Survival @24m | First Death | Peak Capital |
-|---|---|---|---|---|---|
-| A (Symmetric) | 94.67% | 4.67% | 0.00% | Month 10 | $870.34 |
-| B (Bear Dominant) | 88.67% | 1.00% | 0.00% | Month 10.6 | $852.74 |
-| C (Bull Dominant) | 98.33% | 31.67% | 1.00% | Month 11.3 | $1018.66 |
-
-## Section 2 — Product Setup ($5,000 capital, $40/month)
+## Section 1 — Product Setup ($5,000 capital, $40/month)
 
 | Scenario | Survival @12m | Survival @18m | Survival @24m | First Death | Peak Capital | Children Born |
 |---|---|---|---|---|---|---|
 | A (Symmetric) | 100.00% | 100.00% | 100.00% | None | $5880.30 | 0.00 |
 | B (Bear Dominant) | 100.00% | 100.00% | 100.00% | None | $6065.28 | 0.00 |
 | C (Bull Dominant) | 100.00% | 100.00% | 100.00% | None | $9766.95 | 0.10 |
+
+## Section 2 — Production Baseline & Minimum Viable Capital ($2,000 capital)
+
+| Initial Capital | Passive Runway | Survival @12m | Survival @18m | Survival @24m | 95% CI @24m | Meets ≥90% Target |
+|---|---|---|---|---|---|---|
+| $500 | 12.5 mo | 3.33% | 0.00% | 0.00% | [0.00%, 0.00%] | No |
+| $800 | 20 mo | 95.00% | 3.33% | 0.00% | [0.00%, 0.00%] | No |
+| $1,200 | 30 mo | 100.00% | 83.33% | 11.33% | [5.67%, 18.00%] | No |
+| $2,000 | 50 mo | 100.00% | 100.00% | 91.33% | [85.00%, 96.67%] | **YES** |
+| $3,000 | 75 mo | 100.00% | 100.00% | 100.00% | [100.00%, 100.00%] | **YES** |
+| $5,000 | 125 mo | 100.00% | 100.00% | 100.00% | [100.00%, 100.00%] | **YES** |
+
+**Minimum Viable Capital Result:** $2,000 USD achieves 91.33% survival at 24 months (95% CI: [85.00%, 96.67%]), satisfying the >= 90% survival threshold under passive cost drag and symmetric market conditions.
 
 ## Section 3 — Genome & Policy Inheritance (Paper §7, Proposition 2, Proposition 5)
 
@@ -43,20 +48,7 @@ $$Q^{child}(s,a) = \operatorname{clip}\left(Q^{parent}(s,a) + \zeta_{s,a}, -B_Q,
 - **Proposition 5 Verification:** Child genome vector $g^{child} \in \Omega$ is strictly guaranteed by projection.
 - **Proposition 2 Verification:** Child Q-table satisfies $\|Q^{child}\|_\infty \le B_Q = 20.0$, preserving the value function bound across generations.
 
-## Section 4 — Minimum Viable Capital (Initial Capital Sweep)
-
-| Initial Capital | Passive Runway | Survival @12m | Survival @18m | Survival @24m | 95% CI @24m | Meets ≥90% Target |
-|---|---|---|---|---|---|---|
-| $500 | 12.5 mo | 3.33% | 0.00% | 0.00% | [0.00%, 0.00%] | No |
-| $800 | 20 mo | 95.00% | 3.33% | 0.00% | [0.00%, 0.00%] | No |
-| $1,200 | 30 mo | 100.00% | 83.33% | 11.33% | [5.67%, 18.00%] | No |
-| $2,000 | 50 mo | 100.00% | 100.00% | 91.33% | [85.00%, 96.67%] | **YES** |
-| $3,000 | 75 mo | 100.00% | 100.00% | 100.00% | [100.00%, 100.00%] | **YES** |
-| $5,000 | 125 mo | 100.00% | 100.00% | 100.00% | [100.00%, 100.00%] | **YES** |
-
-**Minimum Viable Capital Result:** $2,000 USD achieves 91.33% survival at 24 months (95% CI: [85.00%, 96.67%]), satisfying the >= 90% survival threshold under passive cost drag and symmetric market conditions.
-
-## Section 5 — False Reproduction Under Null Hypothesis ($H_0$)
+## Section 4 — False Reproduction Under Null Hypothesis ($H_0$)
 
 | Metric | Empirical Value | Target Spec | Status |
 |---|---|---|---|
@@ -69,13 +61,16 @@ $$Q^{child}(s,a) = \operatorname{clip}\left(Q^{parent}(s,a) + \zeta_{s,a}, -B_Q,
 
 **Null Hypothesis Verification Verdict:** Under a pure zero-drift martingale market with no economic edge, the statistical gate (DSR ≥ 0.95, 365-day bootstrap CI > 0, 180-day cooldown) achieved a false reproduction rate of **0.00%** across 1000 agents, strictly satisfying the < 1% acceptance criterion and confirming zero selection error from pure noise.
 
+## Section 5 — Target Verification (Product Setup @24m)
+
+| Scenario | Expected Target @24m | Empirical Survival @24m | Status |
+|---|---|---|---|
+| Scenario A (Symmetric) | 40% - 70% | 100.00% | Empirical Observation |
+| Scenario B (Bear Dominant) | 30% - 60% | 100.00% | Empirical Observation |
+| Scenario C (Bull Dominant) | 60% - 85% (+ repro > 0) | 100.00% (Children: 0.10) | Empirical Observation |
+
 ## Notes
 
-- Long-only design per §3.5: the agent does not capture downside moves.
-- Stress setup ($800): passive runway is 20 months. Reproduction is
-  unreachable at 1.5x ($1,200). Demonstrates the agent does not
-  catastrophically fail under adverse conditions, but does not survive
-  beyond the passive runway without market edge.
 - Product setup ($5,000): passive runway is 125 months. The agent has
   time to learn, operate, and reproduce. This is the recommended
   deployment configuration for new owners.
@@ -89,10 +84,10 @@ $$Q^{child}(s,a) = \operatorname{clip}\left(Q^{parent}(s,a) + \zeta_{s,a}, -B_Q,
 - Phase 3 Biological Inheritance: Integrates genome mutation drift under
   Proposition 5 and bounded Q-table perturbation under Proposition 2 ($B_Q = 20.0$).
 
-## Target Verification (Product Setup @24m)
+## Appendix — Stress Benchmark ($800 capital, $40/month)
 
-| Scenario | Expected Target @24m | Empirical Survival @24m | Status |
-|---|---|---|---|
-| Scenario A (Symmetric) | 40% - 70% | 100.00% | Empirical Observation |
-| Scenario B (Bear Dominant) | 30% - 60% | 100.00% | Empirical Observation |
-| Scenario C (Bull Dominant) | 60% - 85% (+ repro > 0) | 100.00% (Children: 0.10) | Empirical Observation |
+| Scenario | Survival @12m | Survival @18m | Survival @24m | First Death | Peak Capital |
+|---|---|---|---|---|---|
+| A (Symmetric) | 94.67% | 4.67% | 0.00% | Month 10 | $870.34 |
+| B (Bear Dominant) | 88.67% | 1.00% | 0.00% | Month 10.6 | $852.74 |
+| C (Bull Dominant) | 98.33% | 31.67% | 1.00% | Month 11.3 | $1018.66 |

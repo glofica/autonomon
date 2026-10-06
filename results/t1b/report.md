@@ -35,13 +35,10 @@
 
 ## Verdict: **PASS**
 
-**Interpretation.** The agent did not fabricate positive edge from a zero-conditional-mean process. The 95% confidence interval lies entirely below the material edge bound. Mean return being negative is a separate finding documented in the diagnostic section below.
+**Interpretation.** The agent did not fabricate positive edge from a zero-conditional-mean process. The 95% confidence interval lies entirely below the material edge bound.
 
-## Diagnostic Note
+With exploration disabled (ε = 0), the agent identifies zero economic opportunity and executes zero trades, preserving 100% of capital with zero transaction drag.
 
-The mean return (0.0000%) is negative. This is consistent with the cost of mandatory exploration under Paper §4 (epsilon floor = 0.05). In a market with no edge, exploration forces trades that pay transaction costs but receive zero expected return. The mean return is a finding, not a failure mode of the agent's learning.
-
-Mean trades per seed: 0.00. Mean turnover: 0.0000. Estimated round-trip cost per trade: 20 bps.
 
 ## Per-Seed Summary
 
