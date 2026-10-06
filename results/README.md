@@ -67,7 +67,6 @@ All tests run on **30 independent seeds**. Generators, parameters, budgets, sche
 
 - [Technical Paper](../docs/GLOFICA_Langton_Autonomon.md) — full specification and mathematical foundations
 - [README](../README.md) — project overview
-- [Business Model](../docs/BUSINESS_MODEL.md) — commercial model
 
 ## Next reports (pending)
 
