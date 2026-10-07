@@ -8,7 +8,7 @@ The evaluation protocol in paper §14 specifies four falsifiable tests. All repo
 
 | Test | Description | Status | Key Result | Report |
 |---|---|---|---|---|
-| **T1** | No-edge baseline (no safety layer) | PASS | Does not fabricate edge from noise | [t1/report.md](t1/report.md) |
+| **T1** | No-edge baseline | PASS | Fabricated alpha: 0.00% | [t1/report.md](t1/report.md) |
 | **T1b** | Exploitation only (ε = 0) | PASS | Zero trades, zero return | [t1b/report.md](t1b/report.md) |
 | **T1c** | Two-phase training | PASS | Learns to hold: 14.03 trades vs 366 baseline | [t1c/report.md](t1c/report.md) |
 | **T1s** | Safety layer active | PASS | Max drawdown 9.07% (vs 72% unconstrained) | [t1s/report.md](t1s/report.md) |
@@ -16,7 +16,7 @@ The evaluation protocol in paper §14 specifies four falsifiable tests. All repo
 | **T1st-verification** | Audit of T1st inconsistencies | VERIFIED | Dust bug fixed; seed analysis documented | [t1st/verification.md](t1st/verification.md) |
 | **T2** | Known stationary MDP convergence | PASS | Sup-norm Q error 0.075; 100% action agreement | [t2/report.md](t2/report.md) |
 | **T3** | Regime change adaptation | PASS | Constant step adapts 15× faster than diminishing | [t3/report.md](t3/report.md) |
-| **T4** | Economic population (Phases 1–3) | PASS | $2,000 min viable; 0.00% false reproduction (1,000 agents) | [t4/report.md](t4/report.md) |
+| **T4** | Economic population (Phases 1–3) | PASS | 100% survival @ $5k; $2,000 min viable; 0.00% false reproduction | [t4/report.md](t4/report.md) |
 | **T4 Phase 2+3** | Statistical reproduction gate + inheritance | PASS | DSR ≥ 0.95 gate; genome in Ω; Q-table in [-B_Q, B_Q] | [t4/report.md](t4/report.md) |
 
 ## What the test family shows
@@ -72,7 +72,7 @@ All tests run on **30 independent seeds**. Generators, parameters, budgets, sche
 
 | Test | Description | Status |
 |---|---|---|
-| T5 | Short-capability validation | Roadmap |
+| T5 | Bidirectional market extension | Planned |
 
 ---
 

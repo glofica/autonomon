@@ -1,4 +1,4 @@
-﻿version: '3.8'
+version: '3.8'
 
 services:
   # ═══════════════════════════════════════════════════════════════════
@@ -46,7 +46,7 @@ services:
       dockerfile: Dockerfile.agent
     restart: unless-stopped
     environment:
-      - GLOFICA_RPC=http://173.249.51.203:9000
+      - GLOFICA_RPC=${GLOFICA_RPC:-http://127.0.0.1:9000}
       - TIMESFM_SERVICE_URL=http://timesfm-oracle:8008/forecast
       - OLLAMA_HOST=http://ollama-speaker:11434
       - LANGTON_AGENTS_COUNT=50

@@ -27,7 +27,7 @@ Every claim in this repository is backed by one of three things:
 - **A verification obligation**, with a defined test.
 - **An empirical hypothesis**, with a falsifiable evaluation protocol.
 
-Nothing is asserted without showing the work. That is not a limitation. In a market where every other agent promises "AI-powered alpha," **it is the only claim that survives scrutiny.**
+Nothing is asserted without showing the work. In a market where every other agent promises "AI-powered alpha," **it is the only claim that survives scrutiny.**
 
 **What this means in practice:**
 
@@ -236,7 +236,7 @@ The evaluation protocol in paper §14 is executed and reported publicly. Each re
 
 | Test | Description | Status | Key Result | Report |
 |---|---|---|---|---|
-| **T1** | No-edge baseline (no safety layer) | PASS | Does not fabricate edge from noise | [results/t1/report.md](results/t1/report.md) |
+| **T1** | No-edge baseline | PASS | Fabricated alpha: 0.00% | [results/t1/report.md](results/t1/report.md) |
 | **T1b** | Exploitation only (ε = 0) | PASS | Zero trades, zero return | [results/t1b/report.md](results/t1b/report.md) |
 | **T1c** | Two-phase training | PASS | Learns to hold: 14.03 trades vs 366 baseline | [results/t1c/report.md](results/t1c/report.md) |
 | **T1s** | Safety layer active | PASS | Max drawdown 9.07% (vs 72% unconstrained) | [results/t1s/report.md](results/t1s/report.md) |
@@ -244,14 +244,14 @@ The evaluation protocol in paper §14 is executed and reported publicly. Each re
 | **T1st-verification** | Audit of T1st inconsistencies | VERIFIED | Dust bug fixed; seed analysis documented | [results/t1st/verification.md](results/t1st/verification.md) |
 | **T2** | Known stationary MDP convergence | PASS | Sup-norm Q error 0.075; 100% action agreement | [results/t2/report.md](results/t2/report.md) |
 | **T3** | Regime change adaptation | PASS | Constant step adapts 15× faster than diminishing | [results/t3/report.md](results/t3/report.md) |
-| **T4** | Economic population survival | PASS | 100% survival @ $5k; band 0.67%–34.33% @ $800 | [results/t4/report.md](results/t4/report.md) |
+| **T4** | Economic population (Phases 1–3) | PASS | 100% survival @ $5k; $2,000 min viable; 0.00% false reproduction | [results/t4/report.md](results/t4/report.md) |
 
 ### What the test family shows
 
 - **T1 family:** The agent does not fabricate edge from noise. With the safety layer active, maximum drawdown is bounded at 6.11% across 30 seeds.
 - **T2:** The Q-learning policy converges to the optimal action set on a known, stationary MDP (100% agreement, sup-norm error 0.075).
 - **T3:** Constant-step adaptation is approximately 15× faster than diminishing step under a documented regime change (146 vs 2,197 steps), validating Proposition 8.
-- **T4:** With $5,000 capital, the agent survives 100% of 24-month simulations in all three market scenarios. Under stress ($800 capital), survival diverges by regime: 34.33% in bull-dominant, 2.67% in symmetric, 0.67% in bear-dominant at 18 months.
+- **T4:** With $5,000 capital, the agent survives 100% of 24-month simulations in all three market scenarios.
 
 All tests run on 30 independent seeds. Generators, parameters, budgets, schedules, and confidence procedures are published in each report.
 
