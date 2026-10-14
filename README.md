@@ -2,9 +2,17 @@
 
 ### The sovereign financial agent that publishes its own bounds
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23373533.svg)](https://doi.org/10.5281/zenodo.23373533)
+[![Code License: BUSL-1.1](https://img.shields.io/badge/Code_License-BUSL--1.1-blue.svg)](LICENSE)
+[![Paper License: CC BY-ND 4.0](https://img.shields.io/badge/Paper_License-CC_BY--ND_4.0-lightgrey.svg)](LICENSE-PAPER)
+[![Foundations: Santa Fe ABM](https://img.shields.io/badge/Foundations-Santa_Fe_ABM_%26_ALife-brightgreen.svg)](#)
+[![Forecasting: Google TimesFM](https://img.shields.io/badge/Forecasting-Google_TimesFM-orange.svg)](https://github.com/google-research/timesfm)
+[![Verification: PAC & Barrier Bounds](https://img.shields.io/badge/Verification-PAC_%26_Barrier_Bounds-purple.svg)](docs/GLOFICA_Langton_Autonomon.md)
+[![Status: Public Source-Available](https://img.shields.io/badge/Codebase-Public_GitHub-success.svg)](https://github.com/glofica/autonomon)
+
 **Author & Chief Architect:** Germán Malavé ([@Praexor](https://github.com/Praexor)) — GLOFICA DLT  
 **Repository:** [github.com/glofica/autonomon](https://github.com/glofica/autonomon)  
-**Technical Paper:** [GLOFICA DLT — Langton Autonomon](docs/GLOFICA_Langton_Autonomon.md)  
+**Technical Paper:** [GLOFICA DLT — Langton Autonomon](https://doi.org/10.5281/zenodo.23373533) · [DOI: 10.5281/zenodo.23373533](https://doi.org/10.5281/zenodo.23373533)  
 **Network:** GLOFICA DLT · Move VM · BFT Consensus · XGO (6 decimals)
 
 ---
@@ -311,6 +319,8 @@ autonomon/
 
 ## Citation
 
+Formal citation metadata is available in [CITATION.cff](CITATION.cff). To cite this work in academic research:
+
 ```bibtex
 @techreport{malave2026autonomon,
   author       = {Malavé, Germán},
@@ -319,7 +329,8 @@ autonomon/
   year         = {2026},
   month        = {October},
   type         = {Technical research paper and protocol specification},
-  url          = {https://github.com/glofica/autonomon}
+  doi          = {10.5281/zenodo.23373533},
+  url          = {https://doi.org/10.5281/zenodo.23373533}
 }
 ```
 

@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use or reference this work, please cite it as below."
+authors:
+  - family-names: "Malavé"
+    given-names: "Germán"
+    alias: "Praexor"
+    affiliation: "GLOFICA DLT"
+    website: "https://glofica.com"
+title: "GLOFICA DLT — Langton Autonomon: Architecture, Mathematical Foundations, and Protocol Specification for Autonomous Financial Artificial-Life Systems"
+version: 1.0.0
+date-released: 2026-10-14
+doi: "10.5281/zenodo.23373533"
+url: "https://doi.org/10.5281/zenodo.23373533"
+repository-code: "https://github.com/glofica/autonomon"
+license: "BUSL-1.1"
+keywords:
+  - "quantitative-finance"
+  - "reinforcement-learning"
+  - "artificial-life"
+  - "agent-based-modelling"
+  - "q-learning"
+  - "timesfm"
+  - "google-research"
+  - "formal-verification"
+  - "control-barrier-functions"
+  - "move-vm"
+  - "deflated-sharpe-ratio"
+preferred-citation:
+  type: report
+  authors:
+    - family-names: "Malavé"
+      given-names: "Germán"
+      alias: "Praexor"
+      affiliation: "GLOFICA DLT"
+  title: "GLOFICA DLT — Langton Autonomon: Architecture, Mathematical Foundations, and Protocol Specification for Autonomous Financial Artificial-Life Systems"
+  institution: "GLOFICA DLT"
+  year: 2026
+  month: 10
+  doi: "10.5281/zenodo.23373533"
+  url: "https://doi.org/10.5281/zenodo.23373533"

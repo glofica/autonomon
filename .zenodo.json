@@ -1,0 +1,28 @@
+{
+  "title": "GLOFICA DLT — Langton Autonomon: Architecture, Mathematical Foundations, and Protocol Specification for Autonomous Financial Artificial-Life Systems",
+  "description": "An autonomous financial controller architecture combining a discretized tabular reinforcement-learning policy, a time-series forecasting service (Google TimesFM), constrained parameter mutation (7-locus genome), and a dedicated sovereign fullnode. The specification distinguishes practical observation-based control from stationary Markov decision processes and proves uniqueness of observation discretization, genome boundedness, Q-value bounds under bounded rewards, preservation of accounting invariants under barrier control functions, PAC sample-complexity lower bounds, and survival analysis under fixed operational runway.",
+  "creators": [
+    {
+      "name": "Malavé, Germán",
+      "affiliation": "GLOFICA DLT"
+    }
+  ],
+  "access_right": "open",
+  "license": "CC-BY-ND-4.0",
+  "keywords": [
+    "Quantitative Finance",
+    "Reinforcement Learning",
+    "Artificial Life",
+    "Agent-Based Modelling",
+    "Q-Learning",
+    "TimesFM",
+    "Google Research",
+    "Move VM",
+    "Formal Verification",
+    "Control Barrier Functions",
+    "Distributed Ledger Technology",
+    "Deflated Sharpe Ratio"
+  ],
+  "upload_type": "publication",
+  "publication_type": "technicalnote"
+}

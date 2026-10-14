@@ -6,7 +6,8 @@
 **Date:** October 2026  
 **Document type:** Technical research paper and protocol specification  
 **Organization:** GLOFICA DLT  
-**Repository:** https://github.com/glofica/autonomon
+**Repository:** https://github.com/glofica/autonomon  
+**Permanent DOI:** [https://doi.org/10.5281/zenodo.23373533](https://doi.org/10.5281/zenodo.23373533)  
 
 **Target network:** GLOFICA DLT, an object-centric Move execution environment with BFT consensus. XGO is the designated gas asset, with six decimal places. Network identity, RPC compatibility, framework semantics, performance, and deployment status must be verified against a pinned implementation.
 
